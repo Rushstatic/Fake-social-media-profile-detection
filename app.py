@@ -1,115 +1,85 @@
-# app.py
+# app.py (Final NLP Version)
 import joblib
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+# Import NLP tools
+import re
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
+from nltk.tokenize import word_tokenize
 
-# --- 1. Initialize Flask App ---
+# --- 1. Initialize App and Load Models ---
 app = Flask(__name__)
-CORS(app) # Enable Cross-Origin Resource Sharing
+CORS(app)
 
-# --- 2. Load the Trained Model ---
-MODEL_PATH = 'xgboost_instagram_model.joblib'
-print(f"Loading model from '{MODEL_PATH}'...")
-try:
-    model = joblib.load(MODEL_PATH)
-    print("Model loaded successfully.")
-except FileNotFoundError:
-    print(f"Error: Model file not found at '{MODEL_PATH}'. Please run train_advanced_models.py first.")
-    model = None
+print("Loading NLP model and vectorizer...")
+model = joblib.load('final_nlp_model.joblib')
+tfidf_vectorizer = joblib.load('tfidf_vectorizer.joblib')
+print("Model and vectorizer loaded successfully.")
 
-# --- 3. Define the Feature Processing Function ---
+# --- 2. Define Text Preprocessing ---
+# We need the exact same function as our engineering script
+stop_words = set(stopwords.words('english'))
+stemmer = PorterStemmer()
+def preprocess_text(text):
+    if not isinstance(text, str): return ""
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\@\w+|\#', '', text)
+    text = re.sub(r'[^A-Za-z\s]', '', text)
+    tokens = word_tokenize(text.lower())
+    stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
+    return " ".join(stemmed_tokens)
+
+# --- 3. Define the FULL Feature Processing Function ---
 def process_input_data(scraped_data):
-    """
-    Takes raw scraped data (as a dictionary) and prepares it
-    into a DataFrame for the model.
-    """
-    # Create a dictionary with the required features, using defaults if keys are missing
+    # Process numerical features
     record = {
         'is_verified': scraped_data.get('is_verified', False),
         'followers_count': scraped_data.get('followers_count', 0),
         'following_count': scraped_data.get('following_count', 0),
-        'posts_count': scraped_data.get('media_count', 0), 
+        'posts_count': scraped_data.get('media_count', 0),
         'has_profile_pic': bool(scraped_data.get('profile_pic_url')),
         'is_business_account': scraped_data.get('is_business_account', False),
         'bio_length': len(scraped_data.get('bio', '')),
         'external_url': bool(scraped_data.get('bio_links')),
-        # We need username to calculate username_digit_count
-        'username': scraped_data.get('username', '') 
+        'username': scraped_data.get('username', '')
     }
-    
-    # Create engineered features
     record['followers_to_following_ratio'] = record['followers_count'] / (record['following_count'] + 1)
     record['username_digit_count'] = sum(c.isdigit() for c in str(record['username']))
     
-    # Define the exact feature order the model was trained on
-    features_order = [
-        'is_verified', 'followers_count', 'following_count', 'posts_count',
-        'has_profile_pic', 'is_business_account', 'bio_length', 'external_url',
-        'followers_to_following_ratio', 'username_digit_count'
-    ]
+    # Create a DataFrame for the numerical features
+    df_numerical = pd.DataFrame([record])
+    df_numerical = df_numerical.drop(columns=['username']) # Drop username as it's not a feature
+
+    # Process text features
+    bio_text = scraped_data.get('bio', '')
+    cleaned_bio = preprocess_text(bio_text)
     
-    # Create a pandas DataFrame
-    df = pd.DataFrame([record])
-    # Ensure the column order is correct
-    df = df[features_order]
-    
-    return df
+    # Use the loaded vectorizer to transform the bio
+    tfidf_features = tfidf_vectorizer.transform([cleaned_bio]).toarray()
+    df_text = pd.DataFrame(tfidf_features, columns=[f'word_{i}' for i in range(tfidf_features.shape[1])])
 
-# In app.py
+    # Combine numerical and text features
+    df_final = pd.concat([df_numerical.reset_index(drop=True), df_text.reset_index(drop=True)], axis=1)
+    return df_final
 
-import certifi # Make sure this is imported at the top
-import requests # Make sure this is imported at the top
-
-# ... (keep the rest of the file the same: app initialization, model loading, etc.) ...
-
-# --- UPDATE THE API PREDICTION ENDPOINT ---
+# --- 4. Define the API Prediction Endpoint ---
 @app.route('/predict', methods=['POST'])
 def predict():
-    if model is None:
-        return jsonify({'error': 'Model is not loaded'}), 500
+    scraped_data = request.get_json()
+    if not scraped_data:
+        return jsonify({'error': 'No data provided'}), 400
 
-    # Get the data from the POST request (e.g., username)
-    data = request.get_json()
-    if not data or 'username' not in data:
-        return jsonify({'error': 'Username is required'}), 400
-    
-    username_to_check = data['username']
-    print(f"Received live request for: {username_to_check}")
-
-    # --- 1. LIVE SCRAPING ---
-    # Call the ScrapingDog API in real-time
-    scraped_data = {}
-    try:
-        # Use the correct API URL for Instagram
-        api_key = '68a2090756d03bd6417bd25f' # Make sure to put your key here
-        api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={api_key}&username={username_to_check}"
-        
-        print(f"Calling ScrapingDog API for '{username_to_check}'...")
-        response = requests.get(api_url, timeout=30, verify=certifi.where())
-        response.raise_for_status()
-        scraped_data = response.json()
-        print("Successfully scraped live data.")
-
-    except requests.exceptions.RequestException as e:
-        print(f"API call failed: {e}")
-        return jsonify({'error': f'Failed to scrape data for {username_to_check}'}), 500
-
-    # --- 2. LIVE PROCESSING ---
     processed_df = process_input_data(scraped_data)
     
-    # --- 3. LIVE PREDICTION ---
     prediction = model.predict(processed_df)
     probability = model.predict_proba(processed_df)
 
     result_label = 'Fake' if prediction[0] == 1 else 'Real'
     confidence = float(max(probability[0])) * 100
     
-    print(f"Prediction for '{username_to_check}': {result_label} with {confidence:.2f}% confidence.")
-    
-    # Return the final result
     return jsonify({
-        'username': username_to_check,
         'prediction': result_label,
         'confidence_percent': f"{confidence:.2f}"
     })

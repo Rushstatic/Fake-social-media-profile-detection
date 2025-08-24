@@ -1,4 +1,4 @@
-# train_advanced_models.py (Simplified Version)
+# train_advanced_models.py (with Feature Importance)
 import pandas as pd
 import joblib
 from sklearn.model_selection import train_test_split
@@ -7,44 +7,44 @@ from xgboost import XGBClassifier
 
 print("--- Script Started ---")
 
-try:
-    # --- 1. Load the Clean Data ---
-    DATASET_PATH = 'processed_data_instagram.csv'
-    print(f"Loading dataset from '{DATASET_PATH}'...")
-    df = pd.read_csv(DATASET_PATH)
+# --- 1. Load the FINAL NLP-Enriched Data ---
+DATASET_PATH = 'nlp_enriched_data.csv'
+print(f"Loading final dataset from '{DATASET_PATH}'...")
+df = pd.read_csv(DATASET_PATH)
 
-    # --- 2. Define Features (X) and Target (y) ---
-    features = [
-        'is_verified', 'followers_count', 'following_count', 'posts_count',
-        'has_profile_pic', 'is_business_account', 'bio_length', 'external_url',
-        'followers_to_following_ratio', 'username_digit_count'
-    ]
-    target = 'target'
+# --- 2. Define Features (X) and Target (y) ---
+features = df.columns.drop('target')
+target = 'target'
 
-    X = df[features]
-    y = df[target]
+X = df[features]
+y = df[target]
 
-    # --- 3. Split Data into Training and Testing Sets ---
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-    print(f"Data split complete. Training set has {len(X_train)} samples.")
+# --- 3. Split Data and Train Model ---
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+print(f"Training XGBoost Model on {len(X_train)} samples...")
+xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+xgb_model.fit(X_train, y_train)
 
-    # --- 4. Train and Evaluate XGBoost Model ---
-    print("\n--- Training XGBoost Model ---")
-    xgb_model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
-    xgb_model.fit(X_train, y_train)
-    print("--- XGBoost Model Training Finished ---")
+# --- 4. Evaluate ---
+print("\n--- XGBoost NLP Model Classification Report ---")
+y_pred_xgb = xgb_model.predict(X_test)
+print(classification_report(y_test, y_pred_xgb, target_names=['Real', 'Fake']))
 
-    # Evaluate the model
-    y_pred_xgb = xgb_model.predict(X_test)
-    print("\nXGBoost Classification Report:")
-    print(classification_report(y_test, y_pred_xgb, target_names=['Real', 'Fake']))
+# --- 5. SHOW THE NLP RESULTS (FEATURE IMPORTANCE) ---
+print("\n--- Top 15 Most Important Features ---")
+# Create a DataFrame of features and their importance scores
+feature_importance = pd.DataFrame({
+    'feature': features,
+    'importance': xgb_model.feature_importances_
+}).sort_values('importance', ascending=False)
 
-    # --- 5. Save the Model ---
-    print("\nSaving the trained XGBoost model...")
-    joblib.dump(xgb_model, 'xgboost_instagram_model.joblib')
-    print("Model saved as 'xgboost_instagram_model.joblib'.")
+# Print the top 15
+print(feature_importance.head(15))
 
-except Exception as e:
-    print(f"\nAN ERROR OCCURRED: {e}")
+
+# --- 6. Save the Final Model ---
+print("\nSaving the final NLP model...")
+joblib.dump(xgb_model, 'final_nlp_model.joblib')
+print("Model saved as 'final_nlp_model.joblib'.")
 
 print("\n--- Script Finished ---")

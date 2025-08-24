@@ -13,11 +13,24 @@ PLATFORM = 'instagram' # Make sure this is 'instagram' or 'x'
 REAL_USERNAMES = [
 
     
-"sachin_choure_25"
+
+"parth.mhatre.391",
+"ishaan_yadav_.88",
+"zaffar.sheikh786_new",
+"vivekrajihanvi",
+"aryan_._yaduvanshi",
 
 ]
 
 FAKE_USERNAMES =[
+"chaudharyr45y6",
+"rihna_collection69",
+"jaanvi_pandey11",
+"kajal__kumari__4__u",
+"anjumara00002",
+"kavya_t4",
+"_.aditi.singh._",
+
 
 ]
 

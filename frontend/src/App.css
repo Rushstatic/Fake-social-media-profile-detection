@@ -1,0 +1,100 @@
+/* src/App.css */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f0f2f5;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  text-align: center;
+  padding: 20px;
+}
+
+.card {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+}
+
+h1 { color: #1c1e21; margin-bottom: 10px; }
+p { color: #606770; margin-bottom: 25px; }
+
+.input-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: bold;
+  color: #4b4f56;
+  margin-bottom: 8px;
+}
+
+.radio-group { display: flex; gap: 20px; }
+.radio-group label { font-weight: normal; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+
+input[type="text"] {
+  width: calc(100% - 32px);
+  padding: 15px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #dddfe2;
+  transition: border-color 0.3s;
+}
+
+input[type="text"]:focus { outline: none; border-color: #1877f2; }
+
+button {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #1877f2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+button:hover { background-color: #166fe5; }
+button:disabled { background-color: #a0bdf5; cursor: not-allowed; }
+
+.result-container {
+  margin-top: 25px;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #dddfe2;
+  background-color: #f7f8fa;
+}
+
+.result-container h3 { margin: 0 0 10px 0; }
+.result-container p { margin: 0; }
+.result-container.error p { color: #d93025; font-weight: bold; }
+.result-container .fake { color: #d93025; }
+.result-container .real { color: #31a24c; }
+
+.loader {
+  margin: 25px auto;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #1877f2;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

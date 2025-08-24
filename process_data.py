@@ -24,6 +24,7 @@ def process_instagram_data(raw_data):
             # FIX: Use 'full_name' since 'username' is missing
             'username': entry.get('full_name', 'unknown_user'), 
             'full_name': entry.get('full_name', ''),
+            'bio': entry.get('bio', ''),
             'is_verified': entry.get('is_verified', False),
             'followers_count': entry.get('followers_count', 0),
             'following_count': entry.get('following_count', 0),
@@ -41,20 +42,26 @@ def process_instagram_data(raw_data):
 
 # In process_data.py
 
+# In process_data.py
+
 def main():
     """Main function to load, process, and save the data."""
-    
-    # CHANGE: Point to the new directory
     input_dir = "raw_json_data"
     print(f"Loading raw data from '{input_dir}' directory...")
     
-    # CHANGE: Read all individual JSON files from the directory
     raw_data = []
     try:
         for filename in os.listdir(input_dir):
             if filename.endswith(".json"):
-                with open(os.path.join(input_dir, filename), 'r') as f:
-                    raw_data.append(json.load(f))
+                filepath = os.path.join(input_dir, filename)
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    try:
+                        # --- FIX IS HERE ---
+                        # Try to load the JSON, but if it's empty, skip it.
+                        raw_data.append(json.load(f))
+                    except json.JSONDecodeError:
+                        print(f"  -> Skipping corrupted or empty file: {filename}")
+                        continue
     except FileNotFoundError:
         print(f"Error: The directory '{input_dir}' was not found. Did you run collect_data.py first?")
         return
@@ -63,26 +70,17 @@ def main():
     print("Processing data...")
     processed_list = process_instagram_data(raw_data)
     
-    # ... (the rest of the code is unchanged)
-    
     if not processed_list:
-        print("No data was processed. Check your raw JSON file for content.")
+        print("No data was processed. Check the content of your JSON files.")
         return
         
-    # Convert the list of dictionaries to a pandas DataFrame
     df = pd.DataFrame(processed_list)
     
     print("Creating engineered features...")
-    # --- Feature Engineering ---
-    # Create the follower/following ratio, adding 1 to avoid division by zero
     df['followers_to_following_ratio'] = df['followers_count'] / (df['following_count'] + 1)
-    # Get the number of digits in the username
     df['username_digit_count'] = df['username'].apply(lambda x: sum(c.isdigit() for c in str(x)))
-    
-    # Convert our target label to a number (fake=1, real=0)
     df['target'] = df['account_label'].apply(lambda x: 1 if x == 'fake' else 0)
     
-    # Save the clean data to a CSV file
     df.to_csv(OUTPUT_CSV_FILE, index=False)
     
     print(f"\nProcessing complete! Clean data saved to '{OUTPUT_CSV_FILE}'.")
