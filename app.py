@@ -1,4 +1,4 @@
-# app.py (Final NLP Version)
+# app.py
 import joblib
 import pandas as pd
 from flask import Flask, request, jsonify
@@ -9,7 +9,7 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
 
-# --- 1. Initialize App and Load Models ---
+# Initialization
 app = Flask(__name__)
 CORS(app)
 
@@ -18,8 +18,7 @@ model = joblib.load('final_nlp_model.joblib')
 tfidf_vectorizer = joblib.load('tfidf_vectorizer.joblib')
 print("Model and vectorizer loaded successfully.")
 
-# --- 2. Define Text Preprocessing ---
-# We need the exact same function as our engineering script
+# 2.
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 def preprocess_text(text):
@@ -31,9 +30,9 @@ def preprocess_text(text):
     stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return " ".join(stemmed_tokens)
 
-# --- 3. Define the FULL Feature Processing Function ---
+# 3. feature processing
 def process_input_data(scraped_data):
-    # Process numerical features
+    
     record = {
         'is_verified': scraped_data.get('is_verified', False),
         'followers_count': scraped_data.get('followers_count', 0),
@@ -50,9 +49,9 @@ def process_input_data(scraped_data):
     
     # Create a DataFrame for the numerical features
     df_numerical = pd.DataFrame([record])
-    df_numerical = df_numerical.drop(columns=['username']) # Drop username as it's not a feature
+    df_numerical = df_numerical.drop(columns=['username'])
 
-    # Process text features
+    # Process text feature
     bio_text = scraped_data.get('bio', '')
     cleaned_bio = preprocess_text(bio_text)
     
@@ -64,7 +63,7 @@ def process_input_data(scraped_data):
     df_final = pd.concat([df_numerical.reset_index(drop=True), df_text.reset_index(drop=True)], axis=1)
     return df_final
 
-# --- 4. Define the API Prediction Endpoint ---
+# 4 api prediction
 @app.route('/predict', methods=['POST'])
 def predict():
     scraped_data = request.get_json()
@@ -84,6 +83,6 @@ def predict():
         'confidence_percent': f"{confidence:.2f}"
     })
 
-# --- 5. Run the Flask App ---
+# Final run
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
