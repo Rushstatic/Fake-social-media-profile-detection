@@ -49,7 +49,7 @@ A full-stack application that analyzes public Instagram and X profiles to detect
     npm install
     npm start
     ```
-    2.  **Frontend Setup**
+3. **Frontend Setup**
     ```bash
     # Split a terminal
     python app.py
