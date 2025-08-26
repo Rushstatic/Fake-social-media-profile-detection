@@ -6,7 +6,7 @@ import os
 import certifi 
 
 
-API_KEY = '68a2090756d03bd6417bd25f' 
+API_KEY = '' 
 PLATFORM = 'instagram' 
 
 # Usernames to Scrape
