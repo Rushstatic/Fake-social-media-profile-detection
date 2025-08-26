@@ -4,10 +4,10 @@ import axios from 'axios';
 import './App.css';
 
 function App() {
-  // State variables to manage the form and results
+
   const [username, setUsername] = useState('');
-  const [platform, setPlatform] = useState('instagram'); // Default to instagram
-  const [modelChoice, setModelChoice] = useState('xgboost'); // Default to xgboost
+  const [platform, setPlatform] = useState('instagram'); 
+  const [modelChoice, setModelChoice] = useState('xgboost'); 
   
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ function App() {
     setError(null);
 
     try {
-      // Send all three pieces of data to our Flask backend
+
       const response = await axios.post('http://127.0.0.1:5000/predict', {
         username: username,
         platform: platform,
@@ -28,7 +28,7 @@ function App() {
       });
       setResult(response.data);
     } catch (err) {
-      // Handle errors, like if the model for 'x' isn't available yet
+
       if (err.response && err.response.data.error) {
         setError(err.response.data.error);
       } else {
