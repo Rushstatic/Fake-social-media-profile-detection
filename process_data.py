@@ -3,9 +3,9 @@ import json
 import pandas as pd
 import os
 
-# The name of the raw JSON file you created
+# The name of the raw JSON file 
 INPUT_JSON_FILE = 'raw_data_instagram.json' 
-# The name of the clean CSV file we will create
+# The name of the clean CSV file
 OUTPUT_CSV_FILE = 'processed_data_instagram.csv'
 
 # In process_data.py
@@ -17,11 +17,9 @@ def process_instagram_data(raw_data):
     for entry in raw_data:
         label = entry.get('account_label', 'unknown')
         
-        # --- Feature Extraction (UPDATED LOGIC) ---
-        # The 'username' field seems to be missing from the API response.
-        # We will use 'full_name' as the main identifier.
+
         record = {
-            # FIX: Use 'full_name' since 'username' is missing
+            
             'username': entry.get('full_name', 'unknown_user'), 
             'full_name': entry.get('full_name', ''),
             'bio': entry.get('bio', ''),
@@ -40,7 +38,7 @@ def process_instagram_data(raw_data):
         
     return processed_records
 
-# In process_data.py
+# 
 
 # In process_data.py
 
@@ -56,8 +54,7 @@ def main():
                 filepath = os.path.join(input_dir, filename)
                 with open(filepath, 'r', encoding='utf-8') as f:
                     try:
-                        # --- FIX IS HERE ---
-                        # Try to load the JSON, but if it's empty, skip it.
+
                         raw_data.append(json.load(f))
                     except json.JSONDecodeError:
                         print(f"  -> Skipping corrupted or empty file: {filename}")
@@ -66,7 +63,6 @@ def main():
         print(f"Error: The directory '{input_dir}' was not found. Did you run collect_data.py first?")
         return
 
-    # The rest of the function remains the same...
     print("Processing data...")
     processed_list = process_instagram_data(raw_data)
     
