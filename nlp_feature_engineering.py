@@ -1,4 +1,4 @@
-# nlp_feature_engineering.py (with Link Checker)
+# nlp_feature_engineering.py 
 import pandas as pd
 import re
 import joblib
@@ -13,7 +13,6 @@ OUTPUT_CSV = 'nlp_enriched_data.csv'
 print(f"Loading data from {INPUT_CSV}...")
 df = pd.read_csv(INPUT_CSV)
 
-# --- NEW: Define a function to check for suspicious links ---
 def has_suspicious_link(text):
     """Checks if bio text contains keywords like 'telegram' or 't.me'."""
     if not isinstance(text, str):
@@ -23,7 +22,7 @@ def has_suspicious_link(text):
         return True
     return False
 
-# --- Define Custom Keyword Counting Functions ---
+#Kewords
 suspicious_bio_keywords = ['giveaway', 'free', 'followers', 'linkinbio', 'promo', 'dm for collab', 'ambassador']
 suspicious_username_keywords = ['official', 'service', 'link', 'free', 'buy', 'shop', 'store', 'promo']
 
@@ -41,7 +40,7 @@ def count_suspicious_username_words(text):
         if word in text.lower(): count += 1
     return count
 
-# --- Define Text Preprocessing for TF-IDF ---
+# Text processing
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 
@@ -54,7 +53,7 @@ def preprocess_text(text):
     stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return " ".join(stemmed_tokens)
 
-# --- Apply All Feature Engineering Steps ---
+
 print("Applying custom feature engineering...")
 df['has_suspicious_link'] = df['bio'].apply(has_suspicious_link)
 df['suspicious_bio_word_count'] = df['bio'].apply(count_suspicious_bio_words)
@@ -68,7 +67,6 @@ tfidf_vectorizer = TfidfVectorizer(max_features=100)
 tfidf_features = tfidf_vectorizer.fit_transform(df['cleaned_bio']).toarray()
 tfidf_df = pd.DataFrame(tfidf_features, columns=[f'word_{i}' for i in range(tfidf_features.shape[1])])
 
-# --- Combine and Save ---
 print("Combining all features...")
 df_original_features = df.drop(columns=['username', 'full_name', 'bio', 'account_label', 'cleaned_bio'])
 df_final = pd.concat([
