@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
@@ -24,6 +25,23 @@ function App() {
   }, [isDarkMode]);
 
   // handleSubmit function
+=======
+// src/App.js
+import React, { useState } from 'react';
+import axios from 'axios';
+import './App.css';
+
+function App() {
+
+  const [username, setUsername] = useState('');
+  const [platform, setPlatform] = useState('instagram'); 
+  const [modelChoice, setModelChoice] = useState('xgboost'); 
+  
+  const [result, setResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
@@ -31,6 +49,7 @@ function App() {
     setError(null);
 
     try {
+<<<<<<< HEAD
       const response = await axios.post('http://127.0.0.1:5000/predict', {
         username: username,
         platform: platform,
@@ -38,11 +57,26 @@ function App() {
       });
       setResult(response.data);
     } catch (err) {
+=======
+
+      const response = await axios.post('http://127.0.0.1:5000/predict', {
+        username: username,
+        platform: platform,
+        model_choice: modelChoice,
+      });
+      setResult(response.data);
+    } catch (err) {
+
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
       if (err.response && err.response.data.error) {
         setError(err.response.data.error);
       } else {
         setError('Could not connect to the server. Is it running?');
       }
+<<<<<<< HEAD
+=======
+      console.error(err);
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
     } finally {
       setIsLoading(false);
     }
@@ -50,6 +84,7 @@ function App() {
 
   return (
     <div className="container">
+<<<<<<< HEAD
       <div className="header">
         <motion.button 
           onClick={() => setIsDarkMode(!isDarkMode)} 
@@ -83,11 +118,32 @@ function App() {
               </label>
               <label className={platform === 'x' ? 'selected' : ''}>
                 <input type="radio" name="platform" value="x" checked={platform === 'x'} onChange={(e) => setPlatform(e.target.value)} />
+=======
+      <div className="card">
+        <h1>Fake Account Detector</h1>
+        <p>Enter a username and select a platform to analyze its authenticity.</p>
+        
+        <form onSubmit={handleSubmit}>
+          {/* Platform Selection */}
+          <div className="input-group">
+            <label>Platform</label>
+            <div className="radio-group">
+              <label>
+                <input type="radio" value="instagram" checked={platform === 'instagram'} onChange={(e) => setPlatform(e.target.value)} />
+                Instagram
+              </label>
+              <label>
+                <input type="radio" value="x" checked={platform === 'x'} onChange={(e) => setPlatform(e.target.value)} />
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
                 Twitter / X
               </label>
             </div>
           </div>
           
+<<<<<<< HEAD
+=======
+          {/* Username Input */}
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
           <div className="input-group">
             <label htmlFor="username-input">Username</label>
             <input
@@ -100,6 +156,7 @@ function App() {
             />
           </div>
 
+<<<<<<< HEAD
           <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             {isLoading ? 'Analyzing...' : 'Analyze Profile'}
           </motion.button>
@@ -175,9 +232,35 @@ function App() {
             {platform === 'x' && ( <motion.img src={XLogo} alt="Twitter/X" className="logo" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} /> )}
           </AnimatePresence>
         </div>
+=======
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? 'Analyzing...' : 'Analyze Profile'}
+          </button>
+        </form>
+
+        {/* --- Result and Error Display --- */}
+        {isLoading && <div className="loader"></div>}
+
+        {error && (
+          <div className="result-container error">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {result && (
+          <div className="result-container">
+            <h3>Prediction: <span className={result.prediction === 'Fake' ? 'fake' : 'real'}>{result.prediction}</span></h3>
+            <p>Confidence: {result.confidence_percent}%</p>
+          </div>
+        )}
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833
       </div>
     </div>
   );
 }
 
+<<<<<<< HEAD
 export default App;
+=======
+export default App;
+>>>>>>> 6e2c125f6b247aa07a71a0746227657e04f82833

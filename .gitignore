@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 1️⃣ Remove old git history if exists
 Remove-Item -Recurse -Force .git -ErrorAction SilentlyContinue
 
@@ -48,3 +49,13 @@ git add .
 
 # 6️⃣ Commit
 git commit -m "
+=======
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code settings
+.vscode/
