@@ -1,0 +1,50 @@
+# 1️⃣ Remove old git history if exists
+Remove-Item -Recurse -Force .git -ErrorAction SilentlyContinue
+
+# 2️⃣ Reinitialize git
+git init
+
+# 3️⃣ Add remote (replace if needed)
+git remote add origin https://github.com/Rushstatic/Fake-social-media-profile-detection.git
+
+# 4️⃣ Create a fresh .gitignore (overwrite old one)
+@"
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.joblib
+
+# Virtual environment
+venv/
+.env/
+
+# Node
+node_modules/
+package-lock.json
+
+# Data files
+*.csv
+*.json
+raw_json_data/
+*.pdf
+
+# Fonts and binaries
+*.ttf
+*.exe
+*.dll
+*.so
+
+# System
+.DS_Store
+Thumbs.db
+"@ | Set-Content .gitignore
+
+# 5️⃣ Stage everything except ignored files
+git add .
+
+# 6️⃣ Commit
+git commit -m "
