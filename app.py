@@ -80,7 +80,6 @@ def preprocess_text(text):
     stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return " ".join(stemmed_tokens)
 
-<<<<<<< HEAD
 def process_input_data(scraped_data, vectorizer):
     record = {
         'is_verified': scraped_data.get('is_verified', False), 'followers_count': scraped_data.get('followers_count', 0),
