@@ -1,5 +1,4 @@
-
-# app.py (Final Complete Version)
+# app.py
 import joblib
 import pandas as pd
 from flask import Flask, request, jsonify, Response
@@ -7,39 +6,36 @@ from flask_cors import CORS
 import requests
 import certifi
 import google.generativeai as genai
-# app.py
-import joblib
-import pandas as pd
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-# Import NLP tools
 
+# NLP Imports
 import re
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
-
 import os
+
+# PDF Import
 from fpdf import FPDF
 
-# --- 1. Initialize App & Configure Gemini ---
+# --- 1. Initialize App & Configure APIs ---
 app = Flask(__name__)
 CORS(app)
 
-GEMINI_API_KEY = 'AIzaSyD7Me8MrIDsLaPhYVb_Z2NBiSHAgt5PCKU' # Paste your key here
+GEMINI_API_KEY = 'AIzaSyD7Me8MrIDsLaPhYVb_Z2NBiSHAgt5PCKU' # Paste your Gemini key here
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
+# --- 2. Load the ADVANCED NLP Model & Vectorizer ---
 try:
     model = joblib.load('final_nlp_model.joblib')
     vectorizer = joblib.load('tfidf_vectorizer.joblib')
     print("NLP model and vectorizer loaded successfully.")
 except FileNotFoundError:
-    print("ERROR: Model or vectorizer file not found. Please re-run create_pipeline.py.")
+    print("ERROR: Model or vectorizer file not found. Please run create_pipeline.py.")
     model = None
     vectorizer = None
 
-#2. Define ALL Helper Functions for Live Processing ---
+# --- 3. Define ALL Helper Functions for Live Processing ---
 def has_suspicious_link(text):
     if not isinstance(text, str): return False
     return 'telegram' in text.lower() or 't.me' in text.lower() or 'onlyfans' in text.lower()
@@ -57,21 +53,6 @@ def count_suspicious_username_words(text):
 def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     stemmer = PorterStemmer()
-
-
-# Initialization
-app = Flask(__name__)
-CORS(app)
-
-print("Loading NLP model and vectorizer...")
-model = joblib.load('final_nlp_model.joblib')
-tfidf_vectorizer = joblib.load('tfidf_vectorizer.joblib')
-print("Model and vectorizer loaded successfully.")
-
-# 2.
-stop_words = set(stopwords.words('english'))
-stemmer = PorterStemmer()
-def preprocess_text(text):
     if not isinstance(text, str): return ""
     text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
     text = re.sub(r'\@\w+|\#', '', text)
@@ -94,8 +75,7 @@ def process_input_data(scraped_data, vectorizer):
     record['suspicious_bio_word_count'] = count_suspicious_bio_words(record['bio'])
     record['suspicious_username_word_count'] = count_suspicious_username_words(record['username'])
     
-    df_numerical = pd.DataFrame([record])
-    df_numerical = df_numerical.drop(columns=['username', 'bio'])
+    df_numerical = pd.DataFrame([record]).drop(columns=['username', 'bio'])
     
     cleaned_bio = preprocess_text(record['bio'])
     tfidf_features = vectorizer.transform([cleaned_bio]).toarray()
@@ -103,23 +83,18 @@ def process_input_data(scraped_data, vectorizer):
     
     return pd.concat([df_numerical.reset_index(drop=True), tfidf_df.reset_index(drop=True)], axis=1)
 
-
 def get_gemini_analysis(scraped_data, prediction, confidence):
-    """Calls the Gemini API to get a detailed analysis."""
     try:
         prompt = f"""
         You are an expert social media analyst. You have been given profile data and a prediction.
-
         **Profile Data:**
         - Username: {scraped_data.get('username')}
         - Bio: {scraped_data.get('bio')}
         - Followers: {scraped_data.get('followers_count')}
         - Following: {scraped_data.get('following_count')}
-
         **Primary Model Prediction:**
         - Verdict: LIKELY {prediction.upper()}
         - Confidence: {confidence:.2f}%
-
         **Your Task:**
         1. Write a very concise, one-sentence **Analysis Summary**.
         2. After the summary, create a list of up to 3 bulleted **"Points of Caution."** Start each point with the marker CAUTION:.
@@ -129,57 +104,49 @@ def get_gemini_analysis(scraped_data, prediction, confidence):
     except Exception as e:
         print(f"Gemini API call failed: {e}")
         return "AI analysis could not be generated."
-    
-    #3. NEW: Define the PDF Creation Function
+
 class PDF(FPDF):
     def header(self):
-        # Logo (optional, if you have a logo.png in your folder)
-        #self.image('logo.png', 10, 8, 33)
+        self.add_font("DejaVu", "", "DejaVuSans.ttf")
         self.set_font('helvetica', 'B', 20)
-        self.cell(0, 10, 'Fake Buster Analysis Report', 0, 1, 'C')
+        self.cell(0, 10, 'Fake Buster Analysis Report', new_x="LMARGIN", new_y="NEXT", align='C')
         self.ln(10)
 
     def footer(self):
         self.set_y(-15)
         self.set_font('helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-# In app.py
+        self.cell(0, 10, f'Page {self.page_no()}', align='C')
 
 def create_pdf_report(data):
-    """Creates a PDF report from the analysis data."""
     pdf = PDF()
     pdf.add_page()
+    pdf.add_font("DejaVu", "", "DejaVuSans.ttf")
+        # Add the username as a subtitle below the main header
+    username = data.get('username', 'N/A')
+    pdf.set_font('helvetica', 'I', 12)
+    pdf.cell(0, 10, f"Report for Profile: {username}", new_x="LMARGIN", new_y="NEXT", align='C')
+    pdf.ln(10) # Add extra space
     
-    # --- FIX IS HERE ---
-    # Add a Unicode font that supports a wide range of characters
-    # This font is included with the fpdf2 library
-    pdf.add_font("DejaVu", "", "DejaVuSans.ttf", uni=True)
-    
-    # Prediction Verdict
-    pdf.set_font('helvetica', 'B', 16) # Use standard font for the title
+    pdf.set_font('helvetica', 'B', 16)
     if data['prediction'] == 'Fake':
         pdf.set_text_color(220, 53, 69) # Red
     else:
         pdf.set_text_color(40, 167, 69) # Green
-    pdf.cell(0, 10, f"Prediction: {data['prediction']}", ln=1)
-    pdf.set_text_color(0, 0, 0) # Reset color
+    pdf.cell(0, 10, f"Prediction: {data['prediction']}", new_x="LMARGIN", new_y="NEXT", align='L')
+    pdf.set_text_color(0, 0, 0)
     pdf.set_font('helvetica', '', 12)
-    pdf.cell(0, 10, f"Confidence: {data['confidence_percent']}%", ln=1)
+    pdf.cell(0, 10, f"Confidence: {data['confidence_percent']}%", new_x="LMARGIN", new_y="NEXT", align='L')
     pdf.ln(5)
 
-    # AI Analyst Report
     pdf.set_font('helvetica', 'B', 14)
-    pdf.cell(0, 10, 'AI Analyst Report', ln=1)
+    pdf.cell(0, 10, 'AI Analyst Report', new_x="LMARGIN", new_y="NEXT", align='L')
     
-    # --- USE THE UNICODE FONT for the main text ---
-    pdf.set_font('DejaVu', '', 12) 
+    pdf.set_font('DejaVu', '', 12)
     pdf.multi_cell(0, 10, data['ai_analysis'])
 
-    # Return the PDF data in memory
     return bytes(pdf.output())
 
-# --- 4. Define the API Prediction Endpoint ---
+# --- 4. Define API Endpoints ---
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None or vectorizer is None:
@@ -190,22 +157,19 @@ def predict():
         return jsonify({'error': 'Username is required'}), 400
     
     username_to_check = data['username']
-    print(f"Received live request for: {username_to_check}")
-
+    
     scraped_data = {}
     try:
-        api_key = '68a2090756d03bd6417bd25f' # Put your ScrapingDog key here
+        api_key = '68a2090756d03bd6417bd25f'
         api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={api_key}&username={username_to_check}"
         response = requests.get(api_url, timeout=30, verify=certifi.where())
         response.raise_for_status()
         scraped_data = response.json()
-        print("Successfully scraped live data.")
     except requests.exceptions.RequestException as e:
         print(f"API call failed: {e}")
         return jsonify({'error': f'Failed to scrape data for {username_to_check}'}), 500
 
     processed_df = process_input_data(scraped_data, vectorizer)
-    
     processed_df = processed_df[model.get_booster().feature_names]
 
     prediction = model.predict(processed_df)
@@ -218,86 +182,22 @@ def predict():
     return jsonify({
         'prediction': result_label,
         'confidence_percent': f"{confidence:.2f}",
-        'ai_analysis': ai_analysis
+        'ai_analysis': ai_analysis,
+        'username': username_to_check # Added for PDF report
     })
-
-# In app.py
-
-# In app.py
 
 @app.route('/generate-report', methods=['POST'])
 def generate_report():
     data = request.get_json()
     if not data:
         return 'Error: No data provided', 400
-        
-    # Create the PDF in memory
+    
     pdf_data = create_pdf_report(data)
     
-    # Send the PDF back to the browser for download
-    # The browser will handle asking the user where to save it.
     return Response(pdf_data,
                     mimetype='application/pdf',
-                    headers={'Content-Disposition': 'attachment;filename=Fake_Buster_Report.pdf'})
-    
-    
-#5. Run the Flask App
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+                    headers={'Content-Disposition': f'attachment;filename=FakeBuster_Report_{data.get("username")}.pdf'})
 
-# 3. feature processing
-def process_input_data(scraped_data):
-    
-    record = {
-        'is_verified': scraped_data.get('is_verified', False),
-        'followers_count': scraped_data.get('followers_count', 0),
-        'following_count': scraped_data.get('following_count', 0),
-        'posts_count': scraped_data.get('media_count', 0),
-        'has_profile_pic': bool(scraped_data.get('profile_pic_url')),
-        'is_business_account': scraped_data.get('is_business_account', False),
-        'bio_length': len(scraped_data.get('bio', '')),
-        'external_url': bool(scraped_data.get('bio_links')),
-        'username': scraped_data.get('username', '')
-    }
-    record['followers_to_following_ratio'] = record['followers_count'] / (record['following_count'] + 1)
-    record['username_digit_count'] = sum(c.isdigit() for c in str(record['username']))
-    
-    # Create a DataFrame for the numerical features
-    df_numerical = pd.DataFrame([record])
-    df_numerical = df_numerical.drop(columns=['username'])
-
-    # Process text feature
-    bio_text = scraped_data.get('bio', '')
-    cleaned_bio = preprocess_text(bio_text)
-    
-    # Use the loaded vectorizer to transform the bio
-    tfidf_features = tfidf_vectorizer.transform([cleaned_bio]).toarray()
-    df_text = pd.DataFrame(tfidf_features, columns=[f'word_{i}' for i in range(tfidf_features.shape[1])])
-
-    # Combine numerical and text features
-    df_final = pd.concat([df_numerical.reset_index(drop=True), df_text.reset_index(drop=True)], axis=1)
-    return df_final
-
-# 4 api prediction
-@app.route('/predict', methods=['POST'])
-def predict():
-    scraped_data = request.get_json()
-    if not scraped_data:
-        return jsonify({'error': 'No data provided'}), 400
-
-    processed_df = process_input_data(scraped_data)
-    
-    prediction = model.predict(processed_df)
-    probability = model.predict_proba(processed_df)
-
-    result_label = 'Fake' if prediction[0] == 1 else 'Real'
-    confidence = float(max(probability[0])) * 100
-    
-    return jsonify({
-        'prediction': result_label,
-        'confidence_percent': f"{confidence:.2f}"
-    })
-
-# Final run
+# --- 5. Run the Flask App ---
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

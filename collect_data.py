@@ -36,7 +36,6 @@ FAKE_USERNAMES =[
 "aryang_456",
 "tejsaxena274083",
 "Kanhaiy47289401"
-=======
 "parth.mhatre.391",
 "ishaan_yadav_.88",
 "zaffar.sheikh786_new",
@@ -72,13 +71,6 @@ def fetch_profile_data(username, platform):
         api_url = f"https://api.scrapingdog.com/x/profile?api_key={API_KEY}&profileId={username}"
     elif platform == 'instagram':
         # This now exactly matches your successful test code
-
-
-    if platform == 'x':
-        
-        api_url = f"https://api.scrapingdog.com/x/profile?api_key={API_KEY}&profile_id={username}"
-    elif platform == 'instagram':
-        
 
         api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={API_KEY}&username={username}"
     else:
