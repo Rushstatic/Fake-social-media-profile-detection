@@ -183,7 +183,8 @@ def predict():
         'prediction': result_label,
         'confidence_percent': f"{confidence:.2f}",
         'ai_analysis': ai_analysis,
-        'username': username_to_check # Added for PDF report
+        'username': username_to_check,
+        'scraped_data': scraped_data
     })
 
 @app.route('/generate-report', methods=['POST'])

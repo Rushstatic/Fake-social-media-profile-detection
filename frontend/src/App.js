@@ -1,8 +1,7 @@
-// src/App.js
+// src/App.js (Final Stable Version)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import './App.css';
 import InstagramLogo from './instagram-logo.svg';
@@ -31,7 +30,6 @@ function App() {
       const response = await axios.post('http://127.0.0.1:5000/predict', {
         username: username,
         platform: platform,
-        model_choice: 'xgboost',
       });
       setResult(response.data);
     } catch (err) {
@@ -48,22 +46,12 @@ function App() {
   return (
     <div className="container">
       <div className="header">
-        <motion.button
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="mode-toggle"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
+        <button onClick={() => setIsDarkMode(!isDarkMode)} className="mode-toggle">
           {isDarkMode ? '☀️' : '🌙'}
-        </motion.button>
+        </button>
       </div>
 
-      <motion.div
-        className="card"
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-      >
+      <div className="card">
         <div className="title-container">
           <img src={Logo} alt="Fake Buster Logo" className="logo-main" />
           <h1>Fake Buster</h1>
@@ -87,89 +75,58 @@ function App() {
 
           <div className="input-group">
             <label htmlFor="username-input">Username</label>
-            <input
-              id="username-input"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username to analyze..."
-              required
-            />
+            <input id="username-input" type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter username to analyze..." required />
           </div>
 
-          <motion.button type="submit" disabled={isLoading} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <button type="submit" disabled={isLoading}>
             {isLoading ? 'Analyzing...' : 'Analyze Profile'}
-          </motion.button>
+          </button>
         </form>
 
-        <AnimatePresence>
-          {isLoading && (
-            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}>
-              <div className="loader"></div>
-            </motion.div>
-          )}
-
-          {error && (
-            <motion.div className="result-container error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <p>{error}</p>
-            </motion.div>
-          )}
-
-          {result && (
-            <motion.div className="result-container" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <h3>Prediction: <span className={result.prediction === 'Fake' ? 'fake' : 'real'}>{result.prediction}</span></h3>
-              <p>Confidence: {result.confidence_percent}%</p>
-                  <div className="download-button-container">
-      <button 
-        onClick={async () => {
-          try {
-            const response = await axios.post('http://127.0.0.1:5000/generate-report', result, {
-              responseType: 'blob', // Important: tells axios to expect a file
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `FakeBuster_Report_${result.username}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode.removeChild(link);
-          } catch (error) {
-            console.error("Could not download the report.", error);
-            setError("Failed to generate PDF report.");
-          }
-        }}
-        className="download-button"
-      >
-        Download Report 📄
-      </button>
-    </div>
-              {result.ai_analysis && (
-                <div className="ai-analysis">
-                  <h4>AI Analyst Report</h4>
-                  <div className="ai-analysis-grid">
-                    <div className="analysis-summary">
-                      <h5>Summary</h5>
-                      <ReactMarkdown>{result.ai_analysis.split('Points of Caution')[0]}</ReactMarkdown>
-                    </div>
-                    <div className="analysis-caution">
-                      <h5>Points of Caution</h5>
-                      <ReactMarkdown>{result.ai_analysis.includes('Points of Caution') ? result.ai_analysis.split('Points of Caution')[1] : 'None'}</ReactMarkdown>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+        {isLoading && <div className="loader"></div>}
+        {error && <div className="result-container error"><p>{error}</p></div>}
+        {result && (
+          <div className="result-container">
+            <h3>Prediction: <span className={result.prediction === 'Fake' ? 'fake' : 'real'}>{result.prediction}</span></h3>
+            <p>Confidence: {result.confidence_percent}%</p>
+            <div className="download-button-container">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await axios.post('http://127.0.0.1:5000/generate-report', result, {
+                      responseType: 'blob',
+                    });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', `FakeBuster_Report_${result.username}.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.parentNode.removeChild(link);
+                  } catch (error) {
+                    setError("Failed to generate PDF report.");
+                  }
+                }}
+                className="download-button"
+              >
+                Download Report 📄
+              </button>
+            </div>
+            {result.ai_analysis && (
+              <div className="ai-analysis">
+                <h4>AI Analyst Report</h4>
+                <ReactMarkdown>{result.ai_analysis}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="footer">
         <p>Made with ❤️ by rushstatic</p>
         <div className="logo-container">
-          <AnimatePresence>
-            {platform === 'instagram' && (<motion.img src={InstagramLogo} alt="Instagram" className="logo" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} />)}
-            {platform === 'x' && (<motion.img src={XLogo} alt="Twitter/X" className="logo" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={{ duration: 0.3 }} />)}
-          </AnimatePresence>
+          {platform === 'instagram' && (<img src={InstagramLogo} alt="Instagram" className="logo" />)}
+          {platform === 'x' && (<img src={XLogo} alt="Twitter/X" className="logo" />)}
         </div>
       </div>
     </div>

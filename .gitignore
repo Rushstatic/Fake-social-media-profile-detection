@@ -59,3 +59,28 @@ __pycache__/
 
 # VS Code settings
 .vscode/
+
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Next.js build folder (if using Next.js)
+frontend/.next/
+
+# Downloaded font files
+DejaVuSans.ttf
+dejavu-fonts-ttf-2.37/
+
+# VS Code settings
+.vscode/
+
+# Ignore generated data and model files
+*.csv
+*.joblib
+raw_json_data/
+reports/
