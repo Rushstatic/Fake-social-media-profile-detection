@@ -1,38 +1,90 @@
+/* src/App.css */
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
 :root {
-  --bg-color: #f1faee;
-  --card-bg-color: #ffffff;
-  --text-color: #1d3557;
-  --secondary-text-color: #457b9d;
-  --border-color: #a8dadc;
-  --accent-color: #457b9d;
-  --accent-hover-color: #3a6883;
-  --success-color: #2a9d8f;
-  --error-color: #e63946;
-  --summary-bg: #e9f5ff;
-  --caution-bg: #fff0f0;
+  --bg-color: #f1fdf4;               /* very light green background */
+  --card-bg-color: #ffffff;          /* keep card clean white */
+  --text-color: #1b4332;             /* deep forest green for primary text */
+  --secondary-text-color: #2d6a4f;   /* medium green */
+  --border-color: #95d5b2;           /* soft pastel green border */
+  --accent-color: #40916c;           /* main accent green */
+  --accent-hover-color: #2d6a4f;     /* darker hover */
+  --success-color: #2a9d8f;          /* keep teal-ish success */
+  --error-color: #e63946;            /* leave error red for clarity */
+  --summary-bg: #e6f9ee;             /* pale green summary background */
+  --caution-bg: #fff0f0;             /* caution stays red-tinted */
 }
+
 .dark-mode {
-  --bg-color: #1d3557;
-  --card-bg-color: #2c4060;
-  --text-color: #f1faee;
-  --secondary-text-color: #a8dadc;
-  --border-color: #457b9d;
-  --summary-bg: #2a3b52;
-  --caution-bg: #4d2f32;
+  --bg-color: #081c15;               /* near-black green */
+  --card-bg-color: #1b4332;          /* forest green card */
+  --text-color: #f1faee;             /* keep text light */
+  --secondary-text-color: #95d5b2;   /* muted light green */
+  --border-color: #2d6a4f;           /* rich green border */
+  --summary-bg: #123524;             /* deep green summary bg */
+  --caution-bg: #4d2f32;             /* keep reddish caution for visibility */
 }
+
+
+/* --- Global Styles --- */
 body {
+  margin: 0;
+  font-family: sans-serif;
+  /* We will control background from the container, not the body */
+}
+
+/* --- LAYOUT MODIFICATIONS START HERE --- */
+
+/* 1. The new main container for the whole app */
+.app-container {
+  position: relative; /* This is essential! */
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--bg-color);
   color: var(--text-color);
-  font-family: sans-serif;
-  margin: 0;
+}
+
+/* The background canvas */
+.letter-glitch-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Places it at the back */
+}
+
+/* The foreground content with your card */
+.app-content {
+  position: relative; /* This is also essential! */
+  z-index: 1; /* Lifts it above the background */
+  width: 100%;
+  height: 100%;
   padding: 20px;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  overflow-y: auto;
+  align-items: center;
 }
 
-.container { width: 100%; max-width: 550px; text-align: center; }
+/* --- LAYOUT MODIFICATIONS END HERE --- */
+
+
+/* --- Your existing component styles (no changes needed below) --- */
+.container {
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
+  text-align: center;
+}
 .header { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .mode-toggle {
   background: var(--card-bg-color);
@@ -44,10 +96,13 @@ body {
   cursor: pointer;
 }
 .card {
+  opacity: 1;
   background-color: var(--card-bg-color);
   padding: 30px 40px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  
+  z-index: 1;
 }
 .title-container {
   display: flex;
@@ -104,15 +159,6 @@ button {
   cursor: pointer;
   margin-top: 10px;
 }
-.loader {
-  margin: 25px auto;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid var(--accent-color);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -152,3 +198,4 @@ button {
 .footer p { font-size: 14px; color: var(--secondary-text-color); }
 .logo-container { height: 40px; width: 40px; margin: 10px auto 0; }
 .logo { width: 40px; height: 40px; }
+

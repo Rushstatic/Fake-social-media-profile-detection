@@ -7,55 +7,35 @@ import certifi # <<< CHANGE 1: Import the certifi library
 
 # --- Configuration ---
 API_KEY = '68a2090756d03bd6417bd25f' 
-PLATFORM = 'x' # Make sure this is 'instagram' or 'x'
+PLATFORM = 'instagram' # Make sure this is 'instagram' or 'x'
 
 # --- Usernames to Scrape ---
-import certifi 
-
-
-API_KEY = '' 
-PLATFORM = 'instagram' 
 
 # Usernames to Scrape
 
 REAL_USERNAMES = [
 
-    
-
-
-"AnuragK87769271",
-"galexy_007",
-"kaashirkor"
-]
-
-FAKE_USERNAMES =[
-"ixmaeelbtc",
-"yslmammi",
-"jyoti6969",
-"mslimlundsucker",
-"aryang_456",
-"tejsaxena274083",
-"Kanhaiy47289401"
-"parth.mhatre.391",
-"ishaan_yadav_.88",
-"zaffar.sheikh786_new",
-"vivekrajihanvi",
-"aryan_._yaduvanshi",
+"khushiiii.luv_"
 
 ]
 
 FAKE_USERNAMES =[
-"chaudharyr45y6",
-"rihna_collection69",
-"jaanvi_pandey11",
-"kajal__kumari__4__u",
-"anjumara00002",
-"kavya_t4",
+
+"manya__58_",
 "_.aditi.singh._",
-
-
+"renuka_meena.22",
+"_check_ruchika99",
+"sakshii__hunnnn",
+"only4u8969",
+"monika__thakur98",
+"xyoulose69",
+"shivni8311",
+"soniya_vc_65",
+"janvi_here.09"
 
 ]
+
+
 
 # In collect_data.py
 
@@ -113,19 +93,6 @@ def main():
 
     print(f"\nData collection complete. Profiles saved in '{output_dir}' folder.")
 
-def main():
-    """Main function to collect and save data for all usernames."""
-    output_dir = "raw_json_data"
-    os.makedirs(output_dir, exist_ok=True)
-
-    print("--- Collecting data for REAL accounts ---")
-    for username in REAL_USERNAMES:
-        data = fetch_profile_data(username, PLATFORM)
-        if data:
-            data['account_label'] = 'real'
-            with open(os.path.join(output_dir, f"{username}.json"), 'w') as f:
-                json.dump(data, f, indent=2)
-        time.sleep(2)
 
     print("\n--- Collecting data for FAKE accounts ---")
     for username in FAKE_USERNAMES:
@@ -143,6 +110,5 @@ def main():
 
 if __name__ == "__main__":
 
-    main()
     main()
 

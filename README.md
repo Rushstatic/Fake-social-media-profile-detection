@@ -8,6 +8,7 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 - **Advanced ML Model**: Utilizes an XGBoost classifier with Natural Language Processing (NLP) to analyze profile statistics and bio text for nuanced detection.
 - **Generative AI Reports**: Integrates Google's Gemini API to provide human-like explanations and points of caution for each prediction.
 - **Dynamic Frontend**: A responsive, animated, and dark-mode-enabled frontend built with React.
+- **Downloadable Reports**: Users can download a full analysis of any profile as a formatted PDF document.
 
 
 ### Application in Action
@@ -23,7 +24,7 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 <img width="2808" height="1496" alt="Final Result with report Dark mode" src="https://github.com/user-attachments/assets/fe94b005-2cdd-45a4-9d02-e1f8abac345d" />
 <img width="2794" height="1502" alt="Final result with light mode" src="https://github.com/user-attachments/assets/2f6abedb-d86c-4a81-b8f1-15d33b684b33" />
 
-
+![alt text](image.png)
 ### Tech Stack
 - **Backend**: Python, Flask, Pandas, Scikit-learn, XGBoost, NLTK
 - **Frontend**: React, CSS, Framer Motion
@@ -48,9 +49,4 @@ A full-stack application that analyzes public Instagram and X profiles to detect
     cd frontend
     npm install
     npm start
-    ```
-3. **Frontend Setup**
-    ```bash
-    # Split a terminal
-    python app.py
     ```

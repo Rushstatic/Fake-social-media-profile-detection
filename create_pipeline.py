@@ -1,4 +1,4 @@
-# create_pipeline.py (Corrected)
+
 import pandas as pd
 import re
 import joblib
@@ -9,7 +9,6 @@ from nltk.stem.porter import PorterStemmer
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
-# --- FIX IS HERE ---
 from sklearn.metrics import classification_report 
 from xgboost import XGBClassifier
 
@@ -39,7 +38,6 @@ def preprocess_text(text):
     stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return " ".join(stemmed_tokens)
 
-# In create_pipeline.py
 
 # In create_pipeline.py
 
