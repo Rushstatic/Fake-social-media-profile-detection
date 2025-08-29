@@ -25,6 +25,13 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 <img width="2794" height="1502" alt="Final result with light mode" src="https://github.com/user-attachments/assets/2f6abedb-d86c-4a81-b8f1-15d33b684b33" />
 
 ![alt text](image.png)
+
+
+### PDF Reprt
+[User can download their report ]
+<img width="1026" height="1450" alt="Report pdf" src="https://github.com/user-attachments/assets/779c3d60-6cab-4791-873a-db37bde30fe9" />
+
+
 ### Tech Stack
 - **Backend**: Python, Flask, Pandas, Scikit-learn, XGBoost, NLTK
 - **Frontend**: React, CSS, Framer Motion
