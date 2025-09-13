@@ -24,7 +24,6 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 <img width="2808" height="1496" alt="Final Result with report Dark mode" src="https://github.com/user-attachments/assets/fe94b005-2cdd-45a4-9d02-e1f8abac345d" />
 <img width="2794" height="1502" alt="Final result with light mode" src="https://github.com/user-attachments/assets/2f6abedb-d86c-4a81-b8f1-15d33b684b33" />
 
-![alt text](image.png)
 
 
 ### PDF Reprt

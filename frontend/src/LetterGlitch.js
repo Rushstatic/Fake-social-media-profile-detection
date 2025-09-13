@@ -1,246 +1,270 @@
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { Renderer, Program, Mesh, Triangle, Vec3 } from 'ogl';
+import './orbit.css';
 
-const LetterGlitch = ({
-  glitchColors = ['#2b4539', '#61dca3', '#61b3dc'],
-  className = '',
-  glitchSpeed = 50,
-  centerVignette = false,
-  outerVignette = true,
-  smooth = true,
-}) => {
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  const letters = useRef([]);
-  const grid = useRef({ columns: 0, rows: 0 });
-  const context = useRef(null);
-  const lastGlitchTime = useRef(Date.now());
+export default function Orb({ hue = 0, hoverIntensity = 0.2, rotateOnHover = true, forceHoverState = false }) {
+  const ctnDom = useRef(null);
 
-  const fontSize = 16;
-  const charWidth = 10;
-  const charHeight = 20;
+  const vert = /* glsl */ `
+    precision highp float;
+    attribute vec2 position;
+    attribute vec2 uv;
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = vec4(position, 0.0, 1.0);
+    }
+  `;
 
-  const lettersAndSymbols = [
-    'F', 'A', 'K', 'E', 'B', 'U', 'S', 'T', 'E', 'R', 'K', 'L', 'M',
-    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    '!', '@', '#', '$', '&', '*', '(', ')', '-', '_', '+', '=', '/',
-    '[', ']', '{', '}', ';', ':', '<', '>', ',', '0', '1', '2', '3',
-    '4', '5', '6', '7', '8', '9'
-  ];
+  const frag = /* glsl */ `
+    precision highp float;
 
-  const getRandomChar = () => {
-    return lettersAndSymbols[Math.floor(Math.random() * lettersAndSymbols.length)];
-  };
+    uniform float iTime;
+    uniform vec3 iResolution;
+    uniform float hue;
+    uniform float hover;
+    uniform float rot;
+    uniform float hoverIntensity;
+    varying vec2 vUv;
 
-  const getRandomColor = () => {
-    return glitchColors[Math.floor(Math.random() * glitchColors.length)];
-  };
-
-  const hexToRgb = (hex) => {
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, (m, r, g, b) => {
-      return r + r + g + g + b + b;
-    });
-
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  };
-
-  const interpolateColor = (start, end, factor) => {
-    const result = {
-      r: Math.round(start.r + (end.r - start.r) * factor),
-      g: Math.round(start.g + (end.g - start.g) * factor),
-      b: Math.round(start.b + (end.b - start.b) * factor),
-    };
-    return `rgb(${result.r}, ${result.g}, ${result.b})`;
-  };
-
-  const calculateGrid = (width, height) => {
-    const columns = Math.ceil(width / charWidth);
-    const rows = Math.ceil(height / charHeight);
-    return { columns, rows };
-  };
-
-  const initializeLetters = (columns, rows) => {
-    grid.current = { columns, rows };
-    const totalLetters = columns * rows;
-    letters.current = Array.from({ length: totalLetters }, () => ({
-      char: getRandomChar(),
-      color: getRandomColor(),
-      targetColor: getRandomColor(),
-      colorProgress: 1,
-    }));
-  };
-
-  const resizeCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const parent = canvas.parentElement;
-    if (!parent) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = parent.getBoundingClientRect();
-
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-
-    canvas.style.width = `${rect.width}px`;
-    canvas.style.height = `${rect.height}px`;
-
-    if (context.current) {
-      context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
+    vec3 rgb2yiq(vec3 c) {
+      float y = dot(c, vec3(0.299, 0.587, 0.114));
+      float i = dot(c, vec3(0.596, -0.274, -0.322));
+      float q = dot(c, vec3(0.211, -0.523, 0.312));
+      return vec3(y, i, q);
+    }
+    
+    vec3 yiq2rgb(vec3 c) {
+      float r = c.x + 0.956 * c.y + 0.621 * c.z;
+      float g = c.x - 0.272 * c.y - 0.647 * c.z;
+      float b = c.x - 1.106 * c.y + 1.703 * c.z;
+      return vec3(r, g, b);
+    }
+    
+    vec3 adjustHue(vec3 color, float hueDeg) {
+      float hueRad = hueDeg * 3.14159265 / 180.0;
+      vec3 yiq = rgb2yiq(color);
+      float cosA = cos(hueRad);
+      float sinA = sin(hueRad);
+      float i = yiq.y * cosA - yiq.z * sinA;
+      float q = yiq.y * sinA + yiq.z * cosA;
+      yiq.y = i;
+      yiq.z = q;
+      return yiq2rgb(yiq);
     }
 
-    const { columns, rows } = calculateGrid(rect.width, rect.height);
-    initializeLetters(columns, rows);
-
-    drawLetters();
-  };
-
-  const drawLetters = () => {
-    if (!context.current || letters.current.length === 0) return;
-    const ctx = context.current;
-    const { width, height } = canvasRef.current.getBoundingClientRect();
-    ctx.clearRect(0, 0, width, height);
-    ctx.font = `${fontSize}px monospace`;
-    ctx.textBaseline = 'top';
-
-    letters.current.forEach((letter, index) => {
-      const x = (index % grid.current.columns) * charWidth;
-      const y = Math.floor(index / grid.current.columns) * charHeight;
-      ctx.fillStyle = letter.color;
-      ctx.fillText(letter.char, x, y);
-    });
-  };
-
-  const updateLetters = () => {
-    if (!letters.current || letters.current.length === 0) return;
-
-    const updateCount = Math.max(1, Math.floor(letters.current.length * 0.05));
-
-    for (let i = 0; i < updateCount; i++) {
-      const index = Math.floor(Math.random() * letters.current.length);
-      if (!letters.current[index]) continue;
-
-      letters.current[index].char = getRandomChar();
-      letters.current[index].targetColor = getRandomColor();
-
-      if (!smooth) {
-        letters.current[index].color = letters.current[index].targetColor;
-        letters.current[index].colorProgress = 1;
-      } else {
-        letters.current[index].colorProgress = 0;
-      }
-    }
-  };
-
-  const handleSmoothTransitions = () => {
-    let needsRedraw = false;
-    letters.current.forEach((letter) => {
-      if (letter.colorProgress < 1) {
-        letter.colorProgress += 0.05;
-        if (letter.colorProgress > 1) letter.colorProgress = 1;
-
-        const startRgb = hexToRgb(letter.color);
-        const endRgb = hexToRgb(letter.targetColor);
-        if (startRgb && endRgb) {
-          letter.color = interpolateColor(startRgb, endRgb, letter.colorProgress);
-          needsRedraw = true;
-        }
-      }
-    });
-
-    if (needsRedraw) {
-      drawLetters();
-    }
-  };
-
-  const animate = () => {
-    const now = Date.now();
-    if (now - lastGlitchTime.current >= glitchSpeed) {
-      updateLetters();
-      drawLetters();
-      lastGlitchTime.current = now;
+    vec3 hash33(vec3 p3) {
+      p3 = fract(p3 * vec3(0.1031, 0.11369, 0.13787));
+      p3 += dot(p3, p3.yxz + 19.19);
+      return -1.0 + 2.0 * fract(vec3(
+        p3.x + p3.y,
+        p3.x + p3.z,
+        p3.y + p3.z
+      ) * p3.zyx);
     }
 
-    if (smooth) {
-      handleSmoothTransitions();
+    float snoise3(vec3 p) {
+      const float K1 = 0.333333333;
+      const float K2 = 0.166666667;
+      vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+      vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+      vec3 e = step(vec3(0.0), d0 - d0.yzx);
+      vec3 i1 = e * (1.0 - e.zxy);
+      vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+      vec3 d1 = d0 - (i1 - K2);
+      vec3 d2 = d0 - (i2 - K1);
+      vec3 d3 = d0 - 0.5;
+      vec4 h = max(0.6 - vec4(
+        dot(d0, d0),
+        dot(d1, d1),
+        dot(d2, d2),
+        dot(d3, d3)
+      ), 0.0);
+      vec4 n = h * h * h * h * vec4(
+        dot(d0, hash33(i)),
+        dot(d1, hash33(i + i1)),
+        dot(d2, hash33(i + i2)),
+        dot(d3, hash33(i + 1.0))
+      );
+      return dot(vec4(31.316), n);
     }
 
-    animationRef.current = requestAnimationFrame(animate);
-  };
+    vec4 extractAlpha(vec3 colorIn) {
+      float a = max(max(colorIn.r, colorIn.g), colorIn.b);
+      return vec4(colorIn.rgb / (a + 1e-5), a);
+    }
+
+    const vec3 baseColor1 = vec3(0.611765, 0.262745, 0.996078);
+    const vec3 baseColor2 = vec3(0.298039, 0.760784, 0.913725);
+    const vec3 baseColor3 = vec3(0.062745, 0.078431, 0.600000);
+    const float innerRadius = 0.6;
+    const float noiseScale = 0.65;
+
+    float light1(float intensity, float attenuation, float dist) {
+      return intensity / (1.0 + dist * attenuation);
+    }
+    float light2(float intensity, float attenuation, float dist) {
+      return intensity / (1.0 + dist * dist * attenuation);
+    }
+
+    vec4 draw(vec2 uv) {
+      vec3 color1 = adjustHue(baseColor1, hue);
+      vec3 color2 = adjustHue(baseColor2, hue);
+      vec3 color3 = adjustHue(baseColor3, hue);
+      
+      float ang = atan(uv.y, uv.x);
+      float len = length(uv);
+      float invLen = len > 0.0 ? 1.0 / len : 0.0;
+      
+      float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
+      float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
+      float d0 = distance(uv, (r0 * invLen) * uv);
+      float v0 = light1(1.0, 10.0, d0);
+      v0 *= smoothstep(r0 * 1.05, r0, len);
+      float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
+      
+      float a = iTime * -1.0;
+      vec2 pos = vec2(cos(a), sin(a)) * r0;
+      float d = distance(uv, pos);
+      float v1 = light2(1.5, 5.0, d);
+      v1 *= light1(1.0, 50.0, d0);
+      
+      float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
+      float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
+      
+      vec3 col = mix(color1, color2, cl);
+      col = mix(color3, col, v0);
+      col = (col + v1) * v2 * v3;
+      col = clamp(col, 0.0, 1.0);
+      
+      return extractAlpha(col);
+    }
+
+    vec4 mainImage(vec2 fragCoord) {
+      vec2 center = iResolution.xy * 0.5;
+      float size = min(iResolution.x, iResolution.y);
+      vec2 uv = (fragCoord - center) / size * 2.0;
+      
+      float angle = rot;
+      float s = sin(angle);
+      float c = cos(angle);
+      uv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y);
+      
+      uv.x += hover * hoverIntensity * 0.1 * sin(uv.y * 10.0 + iTime);
+      uv.y += hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime);
+      
+      return draw(uv);
+    }
+
+    void main() {
+      vec2 fragCoord = vUv * iResolution.xy;
+      vec4 col = mainImage(fragCoord);
+      gl_FragColor = vec4(col.rgb * col.a, col.a);
+    }
+  `;
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = ctnDom.current;
+    if (!container) return;
 
-    context.current = canvas.getContext('2d');
-    resizeCanvas();
-    animate();
+    const renderer = new Renderer({ alpha: true, premultipliedAlpha: false });
+    const gl = renderer.gl;
+    gl.clearColor(0, 0, 0, 0);
+    container.appendChild(gl.canvas);
 
-    let resizeTimeout;
+    const geometry = new Triangle(gl);
+    const program = new Program(gl, {
+      vertex: vert,
+      fragment: frag,
+      uniforms: {
+        iTime: { value: 0 },
+        iResolution: {
+          value: new Vec3(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
+        },
+        hue: { value: hue },
+        hover: { value: 0 },
+        rot: { value: 0 },
+        hoverIntensity: { value: hoverIntensity }
+      }
+    });
 
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        cancelAnimationFrame(animationRef.current);
-        resizeCanvas();
-        animate();
-      }, 100);
+    const mesh = new Mesh(gl, { geometry, program });
+
+    function resize() {
+      if (!container) return;
+      const dpr = window.devicePixelRatio || 1;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      renderer.setSize(width * dpr, height * dpr);
+      gl.canvas.style.width = width + 'px';
+      gl.canvas.style.height = height + 'px';
+      program.uniforms.iResolution.value.set(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    let targetHover = 0;
+    let lastTime = 0;
+    let currentRot = 0;
+    const rotationSpeed = 0.3;
+
+    const handleMouseMove = e => {
+      const rect = container.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const width = rect.width;
+      const height = rect.height;
+      const size = Math.min(width, height);
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const uvX = ((x - centerX) / size) * 2.0;
+      const uvY = ((y - centerY) / size) * 2.0;
+
+      if (Math.sqrt(uvX * uvX + uvY * uvY) < 0.8) {
+        targetHover = 1;
+      } else {
+        targetHover = 0;
+      }
     };
 
-    window.addEventListener('resize', handleResize);
+    const handleMouseLeave = () => {
+      targetHover = 0;
+    };
+
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    let rafId;
+    const update = t => {
+      rafId = requestAnimationFrame(update);
+      const dt = (t - lastTime) * 0.001;
+      lastTime = t;
+      program.uniforms.iTime.value = t * 0.001;
+      program.uniforms.hue.value = hue;
+      program.uniforms.hoverIntensity.value = hoverIntensity;
+
+      const effectiveHover = forceHoverState ? 1 : targetHover;
+      program.uniforms.hover.value += (effectiveHover - program.uniforms.hover.value) * 0.1;
+
+      if (rotateOnHover && effectiveHover > 0.5) {
+        currentRot += dt * rotationSpeed;
+      }
+      program.uniforms.rot.value = currentRot;
+
+      renderer.render({ scene: mesh });
+    };
+    rafId = requestAnimationFrame(update);
 
     return () => {
-      cancelAnimationFrame(animationRef.current);
-      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', resize);
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeChild(gl.canvas);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [glitchSpeed, smooth]);
+  }, [hue, hoverIntensity, rotateOnHover, forceHoverState]);
 
-  const containerStyle = {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000000',
-    overflow: 'hidden',
-  };
-
-  const canvasStyle = {
-    display: 'block',
-    width: '100%',
-    height: '100%',
-  };
-
-  const outerVignetteStyle = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    background: 'radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,1) 100%)',
-  };
-
-  const centerVignetteStyle = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'none',
-    background: 'radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%)',
-  };
-
-  return (
-    <div style={containerStyle} className={className}>
-      <canvas ref={canvasRef} style={canvasStyle} />
-      {outerVignette && <div style={outerVignetteStyle}></div>}
-      {centerVignette && <div style={centerVignetteStyle}></div>}
-    </div>
-  );
-};
-
-export default LetterGlitch;
+  return <div ref={ctnDom} className="orb-container" />;
+}
