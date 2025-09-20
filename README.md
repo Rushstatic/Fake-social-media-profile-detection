@@ -13,24 +13,21 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 
 ### Application in Action
 
+
 #### Main Interface
 [Main Interface]
-<img width="2736" height="1468" alt="Twitter with dark mode" src="https://github.com/user-attachments/assets/351fa158-db11-4b0a-ae1d-ce7be43d4520" />
-
-<img width="2782" height="1484" alt="Instagram frontend" src="https://github.com/user-attachments/assets/0935b45a-ea17-4cc0-9b84-8514930dbafa" />
-
+<img width="2856" height="1536" alt="New Light mode Card" src="https://github.com/user-attachments/assets/39f658e3-add2-41de-8753-ef708abe7937" />
+<img width="2858" height="1542" alt="New Dark mode Card" src="https://github.com/user-attachments/assets/a2a65c81-fdfc-4cc7-bc36-24407bec8b32" />
 #### AI Analyst Report
 [AI Analyst Report showing prediction and analysis in Dark and Light mode ]
-<img width="2808" height="1496" alt="Final Result with report Dark mode" src="https://github.com/user-attachments/assets/fe94b005-2cdd-45a4-9d02-e1f8abac345d" />
-<img width="2794" height="1502" alt="Final result with light mode" src="https://github.com/user-attachments/assets/2f6abedb-d86c-4a81-b8f1-15d33b684b33" />
-
-
-
+<img width="2852" height="1534" alt="New Result light mode" src="https://github.com/user-attachments/assets/a2290c2c-2094-406c-a655-ac02ecfa1528" />
+<img width="2852" height="1546" alt="New Result Dark Mode" src="https://github.com/user-attachments/assets/cb65becc-e3bc-496d-9776-150ada1b3262" />
 ### PDF Reprt
 [User can download their report ]
 <img width="1026" height="1450" alt="Report pdf" src="https://github.com/user-attachments/assets/779c3d60-6cab-4791-873a-db37bde30fe9" />
-
-
+### Website
+<img width="2854" height="1536" alt="Website Title Page" src="https://github.com/user-attachments/assets/8439c717-8106-4da5-a1e4-aa6c4320ed2c" />
+<img width="2854" height="1542" alt="Developers" src="https://github.com/user-attachments/assets/d65ec382-4c15-4216-a286-cf94db8f3ff9" />
 ### Tech Stack
 - **Backend**: Python, Flask, Pandas, Scikit-learn, XGBoost, NLTK
 - **Frontend**: React, CSS, Framer Motion
