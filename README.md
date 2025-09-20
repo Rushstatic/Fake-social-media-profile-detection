@@ -62,8 +62,6 @@ A full-stack application that analyzes public Instagram and X profiles to detect
 ### 🌐 Website
 <img width="2854" height="1536" alt="Website Title Page" src="https://github.com/user-attachments/assets/8439c717-8106-4da5-a1e4-aa6c4320ed2c" />
 
-<img width="2854" height="1542" alt="Developers" src="https://github.com/user-attachments/assets/d65ec382-4c15-4216-a286-cf94db8f3ff9" />
-
 
 ## 🛠 Tech Stack
 - **Backend**: Python, Flask, Pandas, Scikit-learn, XGBoost, NLTK  
