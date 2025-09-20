@@ -17,15 +17,15 @@ import os
 # PDF Import
 from fpdf import FPDF
 
-# --- 1. Initialize App & Configure APIs ---
+# 1. Initialize App & Configure APIs
 app = Flask(__name__)
 CORS(app)
 
-GEMINI_API_KEY = 'AIzaSyD7Me8MrIDsLaPhYVb_Z2NBiSHAgt5PCKU' # Paste your Gemini key here
+GEMINI_API_KEY = '' 
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-# --- 2. Load the ADVANCED NLP Model & Vectorizer ---
+# 2. Load the ADVANCED NLP Model & Vectorizer
 try:
     model = joblib.load('final_nlp_model.joblib')
     vectorizer = joblib.load('tfidf_vectorizer.joblib')
@@ -35,7 +35,7 @@ except FileNotFoundError:
     model = None
     vectorizer = None
 
-# --- 3. Define ALL Helper Functions for Live Processing ---
+# 3. Define ALL Helper Functions for Live Processing
 def has_suspicious_link(text):
     if not isinstance(text, str): return False
     return 'telegram' in text.lower() or 't.me' in text.lower() or 'onlyfans' in text.lower()
@@ -160,7 +160,7 @@ def predict():
     
     scraped_data = {}
     try:
-        api_key = '68a2090756d03bd6417bd25f'
+        api_key = ''
         api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={api_key}&username={username_to_check}"
         response = requests.get(api_url, timeout=30, verify=certifi.where())
         response.raise_for_status()
@@ -199,6 +199,6 @@ def generate_report():
                     mimetype='application/pdf',
                     headers={'Content-Disposition': f'attachment;filename=FakeBuster_Report_{data.get("username")}.pdf'})
 
-# --- 5. Run the Flask App ---
+# --- 5. Run the Flask App
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
