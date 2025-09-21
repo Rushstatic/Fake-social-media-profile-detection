@@ -146,7 +146,7 @@ def create_pdf_report(data):
 
     return bytes(pdf.output())
 
-# --- 4. Define API Endpoints ---
+# 4. Define API Endpoints
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None or vectorizer is None:
@@ -199,6 +199,6 @@ def generate_report():
                     mimetype='application/pdf',
                     headers={'Content-Disposition': f'attachment;filename=FakeBuster_Report_{data.get("username")}.pdf'})
 
-# --- 5. Run the Flask App
+# 5. Run the Flask App
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
