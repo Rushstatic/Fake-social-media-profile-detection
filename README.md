@@ -2,12 +2,18 @@
 
 A full-stack application that analyzes public Instagram and X profiles to detect fake accounts and bots in real-time using a custom-trained machine learning model and generative AI.
 
-## 🔖 Tech Badges  
 <h1 align="center">
   <a href="https://git.io/typing-svg">
     <img src="https://readme-typing-svg.herokuapp.com?lines=I+am+NLP+Geek%2C;Love+To+Work+Around+with+NLP%2C;Crazy+NLP+Enthusiast.">
   </a>
 </h1>
+
+- 🔭 I’m currently working on research projects and automative NLP Packaged Pipelines. 
+- 🌱 Currently exploring more in NLP.
+- 👯 Looking to collaborate on ML, DL,NLP,Data Science or Data Analytics Projects.
+- ⚡ Fun fact: Die hard Fan of EDM
+- 💬 Feel free to drop by a message!
+- 📫 How to reach me: Checkout My Portfolio Website or Social Accounts Given Below<br>
 
 ### 🖥️ Languages
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)  
