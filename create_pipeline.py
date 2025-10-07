@@ -1,4 +1,4 @@
-
+#create_pipeline.py
 import pandas as pd
 import re
 import joblib
@@ -46,7 +46,7 @@ def main():
     print("--- Starting Unified NLP Pipeline ---")
     
     # 1. Load Raw Data
-    input_dir = "raw_json_data/instagram"
+    input_dir = "raw_json_data"
     raw_data = []
     for filename in os.listdir(input_dir):
         if filename.endswith(".json"):
@@ -92,9 +92,25 @@ def main():
     y_final = target_series
 
     # 6. Train the Model using the clean X and y
+# 6. Train the Model using the clean X and y
     X_train, X_test, y_train, y_test = train_test_split(X_final, y_final, test_size=0.2, random_state=42)
-    
-    model = XGBClassifier(use_label_encoder=False, eval_metric='logloss', random_state=42)
+
+# --- ADD THIS NEW SECTION HERE ---
+# Calculate the scale_pos_weight based on the training data
+    real_count = y_train.value_counts()[0]
+    fake_count = y_train.value_counts()[1]
+    scale = real_count / fake_count
+    print(f"Class Imbalance Scale: {scale:.2f}") # Optional: print the scale to see it
+
+# Add the 'scale_pos_weight' parameter when you create the model
+    model = XGBClassifier(
+    use_label_encoder=False, 
+    eval_metric='logloss', 
+    random_state=42,
+    scale_pos_weight=scale  # The new parameter is added here
+)
+# --- END OF NEW SECTION ---
+
     model.fit(X_train, y_train)
 
     # 7. Evaluate and Save

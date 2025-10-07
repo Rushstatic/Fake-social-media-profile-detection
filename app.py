@@ -6,6 +6,8 @@ from flask_cors import CORS
 import requests
 import certifi
 import google.generativeai as genai
+import sqlite3
+from datetime import datetime
 
 # NLP Imports
 import re
@@ -17,15 +19,15 @@ import os
 # PDF Import
 from fpdf import FPDF
 
-# --- 1. Initialize App & Configure APIs ---
+# 1. Initialize App & Configure APIs
 app = Flask(__name__)
 CORS(app)
 
-GEMINI_API_KEY = 'AIzaSyD7Me8MrIDsLaPhYVb_Z2NBiSHAgt5PCKU' # Paste your Gemini key here
+GEMINI_API_KEY = 'AIzaSyDyY5XIWED7zGMK32uX6ObdqI57LcSFk8Q' 
 genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest')
+gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
-# --- 2. Load the ADVANCED NLP Model & Vectorizer ---
+# 2. Load the ADVANCED NLP Model & Vectorizer
 try:
     model = joblib.load('final_nlp_model.joblib')
     vectorizer = joblib.load('tfidf_vectorizer.joblib')
@@ -35,7 +37,7 @@ except FileNotFoundError:
     model = None
     vectorizer = None
 
-# --- 3. Define ALL Helper Functions for Live Processing ---
+# 3. Define ALL Helper Functions for Live Processing
 def has_suspicious_link(text):
     if not isinstance(text, str): return False
     return 'telegram' in text.lower() or 't.me' in text.lower() or 'onlyfans' in text.lower()
@@ -86,19 +88,33 @@ def process_input_data(scraped_data, vectorizer):
 def get_gemini_analysis(scraped_data, prediction, confidence):
     try:
         prompt = f"""
-        You are an expert social media analyst. You have been given profile data and a prediction.
-        **Profile Data:**
-        - Username: {scraped_data.get('username')}
-        - Bio: {scraped_data.get('bio')}
-        - Followers: {scraped_data.get('followers_count')}
-        - Following: {scraped_data.get('following_count')}
-        **Primary Model Prediction:**
-        - Verdict: LIKELY {prediction.upper()}
-        - Confidence: {confidence:.2f}%
-        **Your Task:**
-        1. Write a very concise, one-sentence **Analysis Summary**.
-        2. After the summary, create a list of up to 3 bulleted **"Points of Caution."** Start each point with the marker CAUTION:.
-        """
+You are a Senior Social Media Intelligence Analyst. Based on the profile metadata and model prediction below, deliver a concise, high-accuracy credibility assessment.
+
+ **📄Profile Metadata**
+• Username: {scraped_data.get('username')}
+• Bio: {scraped_data.get('bio')}
+• Followers: {scraped_data.get('followers_count')}
+• Following: {scraped_data.get('following_count')}
+
+ **📊Model Output**
+• Prediction: LIKELY {prediction.upper()}
+• Confidence: {confidence:.2f}%
+
+ **🧠Your Response Must Include**
+ **1️⃣Executive Summary**  
+→ One sentence summarizing the account's overall credibility.
+
+ **2️⃣Risk Indicators**  
+→ Up to 2 short bullets starting with highlighting specific credibility concerns.
+
+ **3️⃣Behavioral Tag**
+→ One descriptive label that best characterizes the account's behavior or intent, by analyzing bio the label can be a possible profession, like if 
+users bio consist of mbbs you can tell with genuine user that doctor just like this proffessions singers, engineer etc. Don't add complex proffessions
+if you have to add then also add marathi translation of it.
+🎯 Be concise, analytical, and business-appropriate. Avoid speculation. Focus on observable signals and model-backed insights. add emojis wherever necessary we are showing 
+this report to show how our project is best so show accordingly.
+"""
+
         response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
@@ -145,8 +161,34 @@ def create_pdf_report(data):
     pdf.multi_cell(0, 10, data['ai_analysis'])
 
     return bytes(pdf.output())
+# === Helper: Log searches into SQLite ===
+# Add this import at the top of your Python file
+import sqlite3
+from datetime import datetime
 
-# --- 4. Define API Endpoints ---
+# Your updated function
+def log_search(username, prediction, confidence):
+    conn = sqlite3.connect('search_history.db')
+    c = conn.cursor()
+    # The CREATE TABLE statement can stay the same
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS searches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            prediction TEXT,
+            confidence REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # THE FIX: We now provide the timestamp from Python
+    # This ensures it uses your server's local time (IST)
+    c.execute('INSERT INTO searches (username, prediction, confidence, timestamp) VALUES (?, ?, ?, ?)',
+              (username, prediction, confidence, datetime.now()))
+    
+    conn.commit()
+    conn.close()
+# 4. Define API Endpoints
 @app.route('/predict', methods=['POST'])
 def predict():
     if model is None or vectorizer is None:
@@ -176,9 +218,8 @@ def predict():
     probability = model.predict_proba(processed_df)
     result_label = 'Fake' if prediction[0] == 1 else 'Real'
     confidence = float(max(probability[0])) * 100
-    
     ai_analysis = get_gemini_analysis(scraped_data, result_label, confidence)
-    
+    log_search(username_to_check, result_label, confidence)
     return jsonify({
         'prediction': result_label,
         'confidence_percent': f"{confidence:.2f}",
@@ -186,6 +227,25 @@ def predict():
         'username': username_to_check,
         'scraped_data': scraped_data
     })
+    
+@app.route('/recent-searches', methods=['GET'])
+def recent_searches():
+    days = int(request.args.get('days', 1))  # default 1 day
+    conn = sqlite3.connect('search_history.db')
+    c = conn.cursor()
+    query = """
+        SELECT username, prediction, confidence, timestamp
+        FROM searches
+        WHERE timestamp >= datetime('now', ?)
+        ORDER BY timestamp DESC
+    """
+    c.execute(query, (f'-{days} days',))
+    rows = c.fetchall()
+    conn.close()
+    return jsonify([
+        {'username': r[0], 'prediction': r[1], 'confidence': r[2], 'timestamp': r[3]}
+        for r in rows
+    ])
 
 @app.route('/generate-report', methods=['POST'])
 def generate_report():
@@ -198,7 +258,31 @@ def generate_report():
     return Response(pdf_data,
                     mimetype='application/pdf',
                     headers={'Content-Disposition': f'attachment;filename=FakeBuster_Report_{data.get("username")}.pdf'})
+    
+    
+    
+# Add this to your main Flask file (e.g., app.py)
 
-# --- 5. Run the Flask App ---
+from flask import jsonify
+
+@app.route('/history', methods=['GET'])
+def get_history():
+    conn = sqlite3.connect('search_history.db')
+    conn.row_factory = sqlite3.Row # This allows accessing columns by name
+    c = conn.cursor()
+    
+    # Fetch the 10 most recent searches in descending order
+    c.execute('SELECT username, prediction, timestamp FROM searches ORDER BY timestamp DESC LIMIT 10')
+    
+    history_data = c.fetchall()
+    conn.close()
+    
+    # Convert the database rows to a list of dictionaries
+    history_list = [dict(row) for row in history_data]
+    
+    return jsonify(history_list)
+
+    
+# 5. Run the Flask App
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

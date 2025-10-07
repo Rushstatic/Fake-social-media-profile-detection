@@ -3,7 +3,7 @@ import requests
 import json
 import time
 import os
-import certifi # <<< CHANGE 1: Import the certifi library
+import certifi #Import the certifi library
 
 # --- Configuration ---
 API_KEY = '68a2090756d03bd6417bd25f' 
@@ -15,23 +15,43 @@ PLATFORM = 'instagram' # Make sure this is 'instagram' or 'x'
 
 REAL_USERNAMES = [
 
-"khushiiii.luv_"
+"amar.patill",
+"_.sweetpanda15",
+"rishi24689",
+"fake_patriota",
+""
 
 ]
 
 FAKE_USERNAMES =[
 
-"manya__58_",
-"_.aditi.singh._",
-"renuka_meena.22",
-"_check_ruchika99",
-"sakshii__hunnnn",
-"only4u8969",
-"monika__thakur98",
-"xyoulose69",
-"shivni8311",
-"soniya_vc_65",
-"janvi_here.09"
+"ritika_riya_sharma_____xx",
+"riyajha__292",
+"riya__singh_7657",
+"riya_yadav324589",
+"moni.kumari119",
+"shrutiifun_40",
+"annu__yadav_0077",
+"shruti_here_paid",
+"sneha_yadav34297",
+"aditi_here_vxe",
+"anupriyakumari866",
+"ansh.ukumari104",
+"riya211517",
+"preti_here",
+"sonam___.56788",
+"kajalkumariiie",
+"garimaa4serviice",
+"rani__two",
+"komaal._.143",
+"kajalkumariiiic",
+"angel___ritika_____sharma",
+"chexck_raushniiiii",
+"lvtd.raushni_gupta__56xx",
+"raushniiiii__babex__56x",
+"check_sandhya33",
+"ravina__vc__26",
+"__shalu_098.0"
 
 ]
 
@@ -44,7 +64,6 @@ def fetch_profile_data(username, platform):
     print(f"Fetching data for '{username}'...")
     
 
-    # --- FINAL FIX ---
     # The correct parameter for Instagram is 'username', not 'profile_id' or 'instagram_user'
     if platform == 'x':
         # NOTE: The parameter for X is likely 'profile_id'. Double-check on their site.

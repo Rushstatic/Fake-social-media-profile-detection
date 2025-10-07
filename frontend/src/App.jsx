@@ -1,198 +1,253 @@
-// src/App.js
+// src/App.jsx
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
+import {
+  FaInstagram, FaUserCircle, FaHome, FaCompass, FaBox, FaBell, FaCog, FaPlus, FaFilePdf, FaHistory, FaChevronDown, FaChevronUp
+} from 'react-icons/fa';
+import { BsTwitterX } from 'react-icons/bs';
+import CountUp from 'react-countup';
 
 import "./App.css";
-import InstagramLogo from "./instagram-logo.svg";
-import XLogo from "./x-logo.svg";
-import Logo from "./logo.svg";
-import Orb from "./LetterGlitch";
-import ParticlesBackground from './components/ParticlesBackground';
 
-function App() {
+
+// =================================================================================
+//  NEW, MINIMALIST COMPONENTS
+// =================================================================================
+
+// Replace your entire existing Sidebar component with this new one
+const Sidebar = ({ history }) => {
+
+  const [isHistoryVisible, setIsHistoryVisible] = useState(true);
+
+  return (
+
+    <nav className="sidebar">
+      <div className="sidebar-top">
+        <a href="#" className="sidebar-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M2 7L12 12L22 7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M12 12V22" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          </svg>
+        </a>
+        <button className="sidebar-button"><FaPlus /></button>
+        <div className="sidebar-links">
+          <a href="#" className="sidebar-link active"><FaHome /><span>Home</span></a>
+
+          {/* START: This is the new expandable history section */}
+          <div className="history-section">
+            <button className="sidebar-link history-header" onClick={() => setIsHistoryVisible(!isHistoryVisible)}>
+              <FaHistory />
+              <span>Recent</span>
+              {isHistoryVisible ? <FaChevronUp className="chevron-icon" /> : <FaChevronDown className="chevron-icon" />}
+            </button>
+            {isHistoryVisible && (
+              <div className="history-list">
+                {Array.isArray(history) && history.length > 0 ? (
+                  history.map((item, index) => (
+                    <div key={index} className="history-item">
+                      <span className={`history-dot ${item.prediction === 'Fake' ? 'fake' : 'real'}`}></span>
+                      <span className="history-username">{item.username}</span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="history-empty">No searches yet.</span>
+                )}
+              </div>
+            )}
+          </div>
+          {/* END: New expandable history section */}
+
+          <a href="#" className="sidebar-link"><FaBox /><span>Spaces</span></a>
+        </div>
+      </div>
+      <div className="sidebar-bottom">
+        <a href="#" className="sidebar-link"><FaBell /><span>Notifications</span></a>
+        <a href="#" className="sidebar-link"><FaCog /><span>Settings</span></a>
+        <a href="#" className="sidebar-link"><FaUserCircle /><span>Account</span></a>
+      </div>
+    </nav>
+  );
+};
+
+// Make sure the main App component is still passing the history prop correctly
+// No changes are needed in the App component itself, just in the Sidebar
+
+const AnalysisForm = ({ onSubmit, isLoading }) => {
   const [username, setUsername] = useState("");
   const [platform, setPlatform] = useState("instagram");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username.trim()) {
+      onSubmit({ username, platform });
+    }
+  };
+
+  return (
+    <div className="analysis-form-container">
+      <h1 className="main-logo">fakebuster</h1>
+      <form onSubmit={handleSubmit} className="analysis-form">
+        <div className={`input-wrapper ${username ? 'has-content' : ''}`}>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Analyze a social media profile..."
+            required
+          />
+          <button type="submit" disabled={isLoading || !username.trim()} className="analyze-button">
+            {isLoading ? "..." : "Analyze"}
+          </button>
+        </div>
+        <div className="platform-switcher">
+          <span className="switcher-label">Platform:</span>
+          <button
+            type="button"
+            className={`platform-chip ${platform === 'instagram' ? 'active' : ''}`}
+            onClick={() => setPlatform('instagram')}
+          >
+            <FaInstagram /> Instagram
+          </button>
+          <button
+            type="button"
+            className={`platform-chip ${platform === 'x' ? 'active' : ''}`}
+            onClick={() => setPlatform('x')}
+          >
+            <BsTwitterX /> X
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+/**
+ * A clean, simple component to display a single result.
+ * NOW INCLUDES THE onDownload PROP AND BUTTON.
+ */
+const AnalysisResult = ({ result, onDownload }) => {
+  const isFake = result.prediction === "Fake";
+  return (
+    <div className={`analysis-result ${isFake ? 'fake' : 'real'}`}>
+      <div className="result-header">
+        <div className="result-title">
+          <h4>@{result.username}</h4>
+          <span className={`prediction-pill ${isFake ? 'fake' : 'real'}`}>{result.prediction}</span>
+          <span className="prediction-percent">{result.confidence_percent}%</span>
+        </div>
+        <button className="download-button" onClick={() => onDownload(result)}>
+          <FaFilePdf />
+        </button>
+      </div>
+      <div className="result-body">
+        <ReactMarkdown>{result.ai_analysis}</ReactMarkdown>
+      </div>
+    </div>
+  );
+};
+
+
+
+
+// =================================================================================
+//  MAIN APP COMPONENT
+// =================================================================================
+// Replace your entire existing App function with this one
+
+function App() {
+
+  const LoadingIndicator = () => (
+    <div className="loading-indicator">
+      <div className="loading-dot"></div>
+      <div className="loading-dot"></div>
+      <div className="loading-dot"></div>
+    </div>
+  );
+  // FIX 1: Changed state to handle a single result object, not an array
   const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [history, setHistory] = useState(() => {
+    const savedHistory = localStorage.getItem('searchHistory');
+    return savedHistory ? JSON.parse(savedHistory) : [];
+  });
+
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:5000/recent-searches");
+      setHistory(response.data);
+      localStorage.setItem('searchHistory', JSON.stringify(response.data));
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    }
+  };
 
   useEffect(() => {
-    const container = document.documentElement;
-    container.classList.add("theme-transition");
-    container.classList.toggle("dark-mode", isDarkMode);
+    fetchHistory();
+  }, []);
 
-    const timeout = setTimeout(() => {
-      container.classList.remove("theme-transition");
-    }, 600);
-
-    return () => clearTimeout(timeout);
-  }, [isDarkMode]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleAnalyzeSubmit = async ({ username, platform }) => {
     setIsLoading(true);
-    setResult(null);
     setError(null);
-
+    // FIX 1: Using the correct 'setResult' function
+    setResult(null);
     try {
-      const response = await axios.post("http://127.0.0.1:5000/predict", {
-        username,
-        platform,
-      });
-      setResult(response.data);
+      const response = await axios.post("http://127.0.0.1:5000/predict", { username, platform });
+      const newResult = { ...response.data, id: Date.now() };
+      // FIX 1: Using the correct 'setResult' function
+      setResult(newResult);
+      fetchHistory();
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          "Could not connect to the server. Is it running?"
-      );
+      const errorMessage = err.response?.data?.error || "Could not connect to the analysis server.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const downloadReport = async () => {
+  const handleDownloadReport = async (profileData) => {
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:5000/generate-report",
-        result,
-        { responseType: "blob" }
-      );
+      const response = await axios.post("http://127.0.0.1:5000/generate-report", profileData, { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute(
-        "download",
-        `FakeBuster_Report_${result.username}.pdf`
-      );
+      link.setAttribute("download", `FakeBuster_Report_${profileData.username}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
     } catch {
-      setError("Failed to generate PDF report.");
+      alert("Failed to generate PDF report.");
     }
   };
 
-return (
-  <main className="app-container">
-  <ParticlesBackground />
-    <div className="orb-layer">
-      <Orb hoverIntensity={0.5} rotateOnHover={true} hue={0} />
-    </div>
+  return (
+    <div className="app-layout">
+      <Sidebar history={history} />
+      <main className="main-content">
+        <div className="content-wrapper">
+          <AnalysisForm onSubmit={handleAnalyzeSubmit} isLoading={isLoading} />
 
-    <section className="app-content">
-      <div className="container">
-        <header className="header">
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="mode-toggle"
-            title="Toggle Theme"
-          >
-            {isDarkMode ? "☀️" : "🌙"}
-          </button>
-        </header>
+          {error && <div className="error-message">{error}</div>}
 
-        <div className="card fade-in">
-          <div className="title-container">
-            <img src={Logo} alt="Fake Buster Logo" className="logo-main" />
-            <h1 className="hero-title">Fake Buster</h1>
-          </div>
-          <p className="subtitle">Analyze any public Instagram or X profile.</p>
+          {isLoading && <LoadingIndicator />}
 
-          <form onSubmit={handleSubmit} className="form-section">
-            <div className="input-group">
-              <label>Platform</label>
-              <div className="radio-group">
-                <label className={platform === "instagram" ? "selected" : ""}>
-                  <input
-                    type="radio"
-                    name="platform"
-                    value="instagram"
-                    checked={platform === "instagram"}
-                    onChange={(e) => setPlatform(e.target.value)}
-                  />
-                  Instagram
-                </label>
-                <label className={platform === "x" ? "selected" : ""}>
-                  <input
-                    type="radio"
-                    name="platform"
-                    value="x"
-                    checked={platform === "x"}
-                    onChange={(e) => setPlatform(e.target.value)}
-                  />
-                  Twitter / X
-                </label>
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="username-input">Username</label>
-              <input
-                id="username-input"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter username to analyze..."
-                required
+          <div className="results-feed">
+            {/* FIX 2: Conditionally render the single result, do not use .map() */}
+            {result && (
+              <AnalysisResult
+                key={result.id}
+                result={result}
+                onDownload={handleDownloadReport}
               />
-            </div>
-
-            <button type="submit" disabled={isLoading} className="cta-button">
-              {isLoading ? "Analyzing..." : "Analyze Profile"}
-            </button>
-          </form>
-
-          {isLoading && <div className="loader"></div>}
-
-          {error && (
-            <div className="result-block error">
-              <p>{error}</p>
-            </div>
-          )}
-
-          {result && (
-            <div className="result-block">
-              <h3>
-                Prediction:{" "}
-                <span className={result.prediction === "Fake" ? "fake" : "real"}>
-                  {result.prediction}
-                </span>
-              </h3>
-              <p>Confidence: {result.confidence_percent}%</p>
-              <div className="download-button-container">
-                <button onClick={downloadReport} className="download-button">
-                  Download Report 📄
-                </button>
-              </div>
-              {result.ai_analysis && (
-                <div className="ai-analysis">
-                  <h4>AI Analyst Report</h4>
-                  <ReactMarkdown>{result.ai_analysis}</ReactMarkdown>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <footer className="footer">
-          <p>Made with ❤️ by rushstatic</p>
-          <div className="logo-container">
-            {platform === "instagram" && (
-              <img src={InstagramLogo} alt="Instagram" className="logo" />
-            )}
-            {platform === "x" && (
-              <img src={XLogo} alt="Twitter/X" className="logo" />
             )}
           </div>
-        </footer>
-      </div>
-    </section>
-  </main>
-);
-
+        </div>
+      </main>
+    </div>
+  );
 }
 
 export default App;
