@@ -24,6 +24,7 @@ app = Flask(__name__)
 CORS(app)
 
 GEMINI_API_KEY = 'AIzaSyDyY5XIWED7zGMK32uX6ObdqI57LcSFk8Q' 
+
 genai.configure(api_key=GEMINI_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
@@ -282,7 +283,6 @@ def get_history():
     
     return jsonify(history_list)
 
-    
 # 5. Run the Flask App
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
