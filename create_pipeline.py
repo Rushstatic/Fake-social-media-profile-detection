@@ -1,3 +1,10 @@
+import os
+import certifi
+
+# --- 1. SSL CERTIFICATE HOTFIX (CRUCIAL FOR WINDOWS) ---
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+os.environ['SSL_CERT_FILE'] = certifi.where()
+
 #create_pipeline.py
 import pandas as pd
 import re

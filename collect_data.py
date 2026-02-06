@@ -14,45 +14,11 @@ PLATFORM = 'instagram' # Make sure this is 'instagram' or 'x'
 # Usernames to Scrape
 
 REAL_USERNAMES = [
-
-"amar.patill",
-"_.sweetpanda15",
-"rishi24689",
-"fake_patriota",
-""
+"roshan_as_it_is"
 
 ]
-
 FAKE_USERNAMES =[
-
-"ritika_riya_sharma_____xx",
-"riyajha__292",
-"riya__singh_7657",
-"riya_yadav324589",
-"moni.kumari119",
-"shrutiifun_40",
-"annu__yadav_0077",
-"shruti_here_paid",
-"sneha_yadav34297",
-"aditi_here_vxe",
-"anupriyakumari866",
-"ansh.ukumari104",
-"riya211517",
-"preti_here",
-"sonam___.56788",
-"kajalkumariiie",
-"garimaa4serviice",
-"rani__two",
-"komaal._.143",
-"kajalkumariiiic",
-"angel___ritika_____sharma",
-"chexck_raushniiiii",
-"lvtd.raushni_gupta__56xx",
-"raushniiiii__babex__56x",
-"check_sandhya33",
-"ravina__vc__26",
-"__shalu_098.0"
-
+   
 ]
 
 
@@ -113,21 +79,14 @@ def main():
     print(f"\nData collection complete. Profiles saved in '{output_dir}' folder.")
 
 
-    print("\n--- Collecting data for FAKE accounts ---")
-    for username in FAKE_USERNAMES:
-        data = fetch_profile_data(username, PLATFORM)
-        if data:
-            data['account_label'] = 'fake'
-            with open(os.path.join(output_dir, f"{username}.json"), 'w') as f:
-                json.dump(data, f, indent=2)
-        time.sleep(2)
-
-    print(f"\nData collection complete. Individual profiles saved in '{output_dir}' folder.")
-
-    
+   
     
 
 if __name__ == "__main__":
 
     main()
+
+
+
+
 
