@@ -177,7 +177,7 @@ function App() {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:5000/recent-searches");
+      const response = await axios.get("https://fakebuster-backend.onrender.com/recent-searches");
       setHistory(response.data);
       localStorage.setItem('searchHistory', JSON.stringify(response.data));
     } catch (err) {
@@ -195,7 +195,7 @@ function App() {
     // FIX 1: Using the correct 'setResult' function
     setResult(null);
     try {
-      const response = await axios.post("http://127.0.0.1:5000/predict", { username, platform });
+      const response = await axios.post("https://fakebuster-backend.onrender.com/predict", { username, platform });
       const newResult = { ...response.data, id: Date.now() };
       // FIX 1: Using the correct 'setResult' function
       setResult(newResult);
@@ -210,7 +210,7 @@ function App() {
 
   const handleDownloadReport = async (profileData) => {
     try {
-      const response = await axios.post("http://127.0.0.1:5000/generate-report", profileData, { responseType: "blob" });
+      const response = await axios.post("https://fakebuster-backend.onrender.com/generate-report", profileData, { responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
