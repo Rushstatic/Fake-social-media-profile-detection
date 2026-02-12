@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # 1️⃣ Remove old git history if exists
 Remove-Item -Recurse -Force .git -ErrorAction SilentlyContinue
 
@@ -25,11 +25,10 @@ venv/
 
 # Node
 node_modules/
-package-lock.json
+
 
 # Data files
 *.csv
-*.json
 raw_json_data/
 *.pdf
 
@@ -81,7 +80,6 @@ dejavu-fonts-ttf-2.37/
 
 # Ignore generated data and model files
 *.csv
-*.joblib
 raw_json_data/
 reports/
 

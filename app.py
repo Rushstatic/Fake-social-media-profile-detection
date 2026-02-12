@@ -11,9 +11,6 @@ from datetime import datetime
 import os
 import logging
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
 # NLP Imports
 import re
 from nltk.corpus import stopwords
@@ -194,27 +191,6 @@ def log_search(username, prediction, confidence):
               (username, prediction, confidence, datetime.now()))
     conn.commit()
     conn.close()
-    
-    
-
-def fetch_with_retry(api_url):
-    session = requests.Session()
-
-    retry_strategy = Retry(
-        total=3,  # try 3 times
-        backoff_factor=1,  # wait 1s, 2s, 4s
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"],
-        respect_retry_after_header=True
-    )
-
-    adapter = HTTPAdapter(max_retries=retry_strategy)
-    session.mount("https://", adapter)
-
-    response = session.get(api_url, timeout=15, verify=certifi.where())
-    response.raise_for_status()
-    return response.json()
-
 
 # ---------------------------
 # API endpoints
@@ -231,9 +207,11 @@ def predict():
     username_to_check = data['username']
     scraped_data = {}
     try:
-        api_key = '6986ef8668afcb22266b6f5c'
+        api_key = '68a369c735413d65598ed464'
         api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={api_key}&username={username_to_check}"
-        scraped_data = fetch_with_retry(api_url)
+        response = requests.get(api_url, timeout=30, verify=certifi.where())
+        response.raise_for_status()
+        scraped_data = response.json()
     except requests.exceptions.RequestException as e:
         logging.exception("API call failed")
         return jsonify({'error': f'Failed to scrape data for {username_to_check}'}), 500
@@ -346,11 +324,8 @@ def get_history():
     conn.close()
     history_list = [dict(row) for row in history_data]
     return jsonify(history_list)
-
 # ---------------------------
-# Run app
+# # Run app
 # ---------------------------
 if __name__ == '__main__':
-    # Ensure NLTK data presence may be required for first run (stopwords/tokenizers).
-    # If NLTK resources are missing, install them or handle fallback in preprocess_text.
     app.run(debug=True, port=5000)
