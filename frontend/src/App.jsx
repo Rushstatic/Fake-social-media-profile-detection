@@ -4,10 +4,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import {
-  FaInstagram, FaUserCircle, FaHome, FaCompass, FaBox, FaBell, FaCog, FaPlus, FaFilePdf, FaHistory, FaChevronDown, FaChevronUp
+  FaInstagram, FaUserCircle, FaHome, FaBox, FaBell, FaCog, FaPlus, FaFilePdf, FaHistory, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 import { BsTwitterX } from 'react-icons/bs';
-import CountUp from 'react-countup';
 
 import "./App.css";
 
