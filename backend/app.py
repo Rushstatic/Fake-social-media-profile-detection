@@ -11,6 +11,11 @@ from datetime import datetime
 import os
 import logging
 
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+
+
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
