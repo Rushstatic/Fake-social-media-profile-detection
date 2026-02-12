@@ -224,8 +224,8 @@ def fetch_with_retry(api_url):
     session = requests.Session()
 
     retry_strategy = Retry(
-        total=3,  # try 3 times
-        backoff_factor=1,  # wait 1s, 2s, 4s
+        total=1,  # try 3 times
+        backoff_factor=0,  # wait 1s, 2s, 4s
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET"],
         respect_retry_after_header=True
@@ -234,7 +234,7 @@ def fetch_with_retry(api_url):
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("https://", adapter)
 
-    response = session.get(api_url, timeout=15, verify=certifi.where())
+    response = session.get(api_url, timeout=8, verify=certifi.where())
     response.raise_for_status()
     return response.json()
 
