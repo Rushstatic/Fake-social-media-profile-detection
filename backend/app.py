@@ -194,6 +194,24 @@ def log_search(username, prediction, confidence):
               (username, prediction, confidence, datetime.now()))
     conn.commit()
     conn.close()
+
+def init_db():
+    conn = sqlite3.connect('search_history.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS searches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            prediction TEXT,
+            confidence REAL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
     
     
 
@@ -350,7 +368,7 @@ def get_history():
 # ---------------------------
 # Run app
 # ---------------------------
-if __name__ == '__main__':
-    # Ensure NLTK data presence may be required for first run (stopwords/tokenizers).
-    # If NLTK resources are missing, install them or handle fallback in preprocess_text.
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
