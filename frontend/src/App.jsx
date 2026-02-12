@@ -25,7 +25,7 @@ const Sidebar = ({ history }) => {
 
     <nav className="sidebar">
       <div className="sidebar-top">
-        <a href="#" className="sidebar-logo">
+        <a href="/" className="sidebar-logo">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
             <path d="M2 7L12 12L22 7" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
@@ -34,7 +34,7 @@ const Sidebar = ({ history }) => {
         </a>
         <button className="sidebar-button"><FaPlus /></button>
         <div className="sidebar-links">
-          <a href="#" className="sidebar-link active"><FaHome /><span>Home</span></a>
+          <a href="/" className="sidebar-link active"><FaHome /><span>Home</span></a>
 
           {/* START: This is the new expandable history section */}
           <div className="history-section">
@@ -60,13 +60,13 @@ const Sidebar = ({ history }) => {
           </div>
           {/* END: New expandable history section */}
 
-          <a href="#" className="sidebar-link"><FaBox /><span>Spaces</span></a>
+          <a href="/" className="sidebar-link"><FaBox /><span>Spaces</span></a>
         </div>
       </div>
       <div className="sidebar-bottom">
-        <a href="#" className="sidebar-link"><FaBell /><span>Notifications</span></a>
-        <a href="#" className="sidebar-link"><FaCog /><span>Settings</span></a>
-        <a href="#" className="sidebar-link"><FaUserCircle /><span>Account</span></a>
+        <a href="/" className="sidebar-link"><FaBell /><span>Notifications</span></a>
+        <a href="/" className="sidebar-link"><FaCog /><span>Settings</span></a>
+        <a href="/" className="sidebar-link"><FaUserCircle /><span>Account</span></a>
       </div>
     </nav>
   );
