@@ -92,7 +92,11 @@ def preprocess_text(text):
     text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
     text = re.sub(r'\@\w+|\#', '', text)
     text = re.sub(r'[^A-Za-z\s]', '', text)
-    tokens = word_tokenize(text.lower()) if isinstance(text, str) else []
+    try:
+        tokens = word_tokenize(text.lower())
+    except LookupError:
+        tokens = text.lower().split()
+
     stemmed_tokens = [stemmer.stem(word) for word in tokens if word not in stop_words]
     return " ".join(stemmed_tokens)
 
@@ -255,7 +259,7 @@ def predict():
     username_to_check = data['username']
     scraped_data = {}
     try:
-        api_key = '6986ef8668afcb22266b6f5c'
+        api_key = '699001b6c495d5b82eef88fb'
         api_url = f"https://api.scrapingdog.com/instagram/profile?api_key={api_key}&username={username_to_check}"
         scraped_data = fetch_with_retry(api_url)
     except requests.exceptions.RequestException as e:
