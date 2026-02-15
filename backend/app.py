@@ -12,9 +12,9 @@ import os
 import logging
 
 import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('punkt_tab')
+#nltk.download('punkt')
+#nltk.download('stopwords')
+#nltk.download('punkt_tab')
 
 
 from requests.adapters import HTTPAdapter
